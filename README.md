@@ -17,10 +17,10 @@ An iPhone Safari-controlled homebrew installer for user-owned PS4 PKG files over
 1. Install the NY0 fake-signed homebrew PKG through GoldHEN's Package Installer.
 2. Launch **NY0 Remote Installer** and leave it open.
 3. On the iPhone, open `http://PS4-IP:12800` in Safari while on the same trusted LAN.
-4. Select a PKG whose filename begins with its Content ID, then choose **Upload & Install**.
+4. Select a single `.pkg` file, then choose **Upload & Install**. NY0 reads its Content ID and package metadata from the PKG header; the filename does not need a special format.
 5. Keep the app open until the PS4 download task has received the package. The PS4 system notification is the authority for the final installation result.
 
-The app is designed for private LAN use. Do not expose port 12800 directly to the public internet. For remote access, use a private VPN/subnet-router arrangement rather than public port forwarding.
+The current upload path supports single-file PKGs up to 4 GB; split-package sets are not implemented. The app is designed for private LAN use. Do not expose port 12800 directly to the public internet. For remote access, use a private VPN/subnet-router arrangement rather than public port forwarding.
 
 ## Build and verification
 
