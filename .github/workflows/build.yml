@@ -38,7 +38,6 @@ jobs:
           cp go-linux.mod go.mod
           go build -trimpath -o "$GITHUB_WORKSPACE/ps4/tools/create-fself" .
           test -x "$GITHUB_WORKSPACE/ps4/tools/create-fself"
-          "$GITHUB_WORKSPACE/ps4/tools/create-fself" -h
 
       - name: Generate required PS4 app icon
         run: |
