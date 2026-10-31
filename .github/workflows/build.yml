@@ -18,9 +18,10 @@ jobs:
       - name: Check out source
         uses: actions/checkout@v4
 
-      - name: Build with the pinned OpenOrbis toolchain container
+      - name: Build with the OpenOrbis toolchain container
         run: |
           docker run --rm \
+            --user "$(id -u):$(id -g)" \
             -w /workspace/ps4 \
             -v "$GITHUB_WORKSPACE:/workspace" \
             openorbisofficial/toolchain:latest \
