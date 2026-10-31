@@ -1,7 +1,7 @@
 #include <orbis/libkernel.h>
 #include <orbis/Sysmodule.h>
 #include <orbis/Net.h>
-#include <orbis/NetCtl.h>
+#include <cctype>
 #include <orbis/AppInstUtil.h>
 #include <orbis/Bgft.h>
 #include <orbis/UserService.h>
@@ -20,6 +20,14 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+
+// OpenOrbis NetCtl.h currently includes a missing sys/stdint.h in the container SDK.
+// Keep the small ABI surface used here local rather than including that header.
+#define ORBIS_NET_CTL_INFO_IP_ADDRESS 14
+union Ny0NetCtlInfo { char ip_address[16]; char proxy_server[256]; };
+extern "C" int32_t sceNetCtlInit();
+extern "C" void sceNetCtlTerm();
+extern "C" int32_t sceNetCtlGetInfo(int32_t code, Ny0NetCtlInfo* info);
 
 static constexpr int SERVER_PORT = 12800;
 static constexpr size_t UPLOAD_CHUNK_MAX = 2 * 1024 * 1024;
@@ -389,7 +397,7 @@ static bool init_network() {
     if (sceNetInit() != 0) return false;
     g_net_pool = sceNetPoolCreate("ny0_remote_installer", 1024 * 1024, 0);
     if (g_net_pool < 0) return false;
-    OrbisNetCtlInfo info{};
+    Ny0NetCtlInfo info{};
     if (sceNetCtlGetInfo(ORBIS_NET_CTL_INFO_IP_ADDRESS, &info) == 0 && info.ip_address[0]) {
         strncpy(g_ip, info.ip_address, sizeof(g_ip) - 1);
     }
