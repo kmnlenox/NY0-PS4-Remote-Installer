@@ -1,0 +1,74 @@
+name: Build NY0 PS4 homebrew package
+
+on:
+  push:
+    branches:
+      - main
+      - implementation/**
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Go for the OpenOrbis GP4 generator
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build create-gp4 from the official OpenOrbis source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 https://github.com/OpenOrbis/create-gp4.git "$RUNNER_TEMP/create-gp4-source"
+          mkdir -p "$GITHUB_WORKSPACE/ps4/tools"
+          cd "$RUNNER_TEMP/create-gp4-source"
+          GO111MODULE=off go build -trimpath -o "$GITHUB_WORKSPACE/ps4/tools/create-gp4" .
+          test -x "$GITHUB_WORKSPACE/ps4/tools/create-gp4"
+          "$GITHUB_WORKSPACE/ps4/tools/create-gp4" -h
+
+      - name: Generate required PS4 app icon
+        run: |
+          set -euo pipefail
+          python3 tools/make_icon.py
+          file sce_sys/icon0.png
+          test -s sce_sys/icon0.png
+        working-directory: ps4
+
+      - name: Build and validate fake-signed homebrew PKG
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            -w /workspace/ps4 \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            openorbisofficial/toolchain:latest \
+            bash -lc 'set -euo pipefail
+              export OO_PS4_TOOLCHAIN=/lib/OpenOrbisSDK
+              test -x tools/create-gp4
+              test -x "$OO_PS4_TOOLCHAIN/bin/linux/create-eboot"
+              test -x "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core"
+              make clean
+              make
+              "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core" pkg_validate IV0000-NY0R00001_00-NY0REMOTEINSTALL.pkg
+              sha256sum IV0000-NY0R00001_00-NY0REMOTEINSTALL.pkg
+              ls -lh IV0000-NY0R00001_00-NY0REMOTEINSTALL.pkg eboot.bin'
+        working-directory: ps4
+
+      - name: Upload validated package
+        uses: actions/upload-artifact@v4
+        with:
+          name: ny0-remote-installer-diagnostic-fpkg
+          path: |
+            ps4/IV0000-NY0R00001_00-NY0REMOTEINSTALL.pkg
+            ps4/eboot.bin
+          if-no-files-found: error
+          retention-days: 14
