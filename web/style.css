@@ -1,0 +1,12 @@
+:root{color-scheme:dark;--bg:#101114;--panel:#191b20;--line:#2b2e36;--text:#f4f5f7;--muted:#969ba7;--accent:#d7ff3f}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 80% 0%,#262b1c 0,transparent 36%),var(--bg);color:var(--text);font:16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+.shell{width:min(100% - 36px,560px);margin:0 auto;padding:calc(22px + env(safe-area-inset-top)) 0 calc(24px + env(safe-area-inset-bottom))}
+.top,.brand,.local{display:flex;align-items:center}.top{justify-content:space-between}.brand{gap:10px;font-size:11px;font-weight:800;letter-spacing:.15em}.mark{display:grid;place-items:center;background:var(--accent);color:#111;width:38px;height:34px;border-radius:8px;font-weight:950;letter-spacing:-.08em;font-size:17px}.local{gap:7px;color:var(--muted);font-size:9px;letter-spacing:.12em}.local i{width:7px;height:7px;background:#8c9b62;border-radius:50%}
+.hero{padding:64px 0 30px}.eyebrow,.field-label{font-size:10px;letter-spacing:.17em;font-weight:800;color:var(--accent)}h1{font-size:clamp(48px,13vw,76px);line-height:.91;letter-spacing:-.07em;margin:18px 0}.hero h1 span{color:#8e939e}.muted{color:var(--muted);line-height:1.55;max-width:390px}
+.panel,.notice{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:20px}.field-label{display:block;margin-bottom:13px;color:#b6bbc5}
+input[type=file]{width:100%;padding:15px;border:1px dashed #454a55;border-radius:12px;background:#121419;color:var(--muted);font-size:13px}.file-info{color:var(--muted);font-size:12px;padding:12px 2px}
+button{width:100%;border:0;border-radius:12px;padding:17px;background:var(--accent);color:#111;font-weight:900;letter-spacing:.08em}button:disabled{opacity:.38}
+.progress{height:5px;background:#30333b;border-radius:9px;margin-top:18px;overflow:hidden}.progress div{height:100%;width:0;background:var(--accent);transition:width .15s}
+#status{color:var(--muted);font-size:12px;line-height:1.5;margin:12px 0 0}.notice{margin-top:14px;border-color:#554a2c}.notice strong{font-size:13px}.notice p{font-size:12px;line-height:1.5;color:var(--muted);margin-bottom:0}
+footer{text-align:center;color:#656a74;font-size:9px;letter-spacing:.15em;padding:32px 0 0}footer span{color:var(--accent);padding:0 5px}
