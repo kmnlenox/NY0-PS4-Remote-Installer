@@ -165,10 +165,13 @@ static void json_error(int fd, int code, const char* message) {
         if (static_cast<unsigned char>(*p) >= 32) body.push_back(*p);
     }
     body += "\"}";
-    response(fd, code, code == 400 ? "Bad Request" : "Internal Server Error", "application/json; charset=utf-8", body);
+    const char* reason = code == 400 ? "Bad Request" :
+                         code == 404 ? "Not Found" :
+                         code == 503 ? "Service Unavailable" : "Internal Server Error";
+    response(fd, code, reason, "application/json; charset=utf-8", body);
 }
 
-static bool send_file(int fd, const char* path, const char* content_type) {
+static bool send_file(int fd, const char* path, const char* content_type, bool head_only = false) {
     FILE* fp = fopen(path, "rb");
     if (!fp) return false;
     fseeko(fp, 0, SEEK_END);
@@ -182,7 +185,7 @@ static bool send_file(int fd, const char* path, const char* content_type) {
         content_type, static_cast<unsigned long long>(total));
     bool ok = n > 0 && send_all(fd, head, static_cast<size_t>(n));
     char buf[32768];
-    while (ok) {
+    while (ok && !head_only) {
         size_t got = fread(buf, 1, sizeof(buf), fp);
         if (got && !send_all(fd, buf, got)) { ok = false; break; }
         if (got < sizeof(buf)) break;
@@ -191,7 +194,7 @@ static bool send_file(int fd, const char* path, const char* content_type) {
     return ok;
 }
 
-static bool send_download(int fd, const std::string& name, const std::string& range) {
+static bool send_download(int fd, const std::string& name, const std::string& range, bool head_only) {
     if (!safe_filename(name)) return false;
     std::string path = "/data/ny0_uploads/" + name;
     FILE* fp = fopen(path.c_str(), "rb");
@@ -235,7 +238,7 @@ static bool send_download(int fd, const std::string& name, const std::string& ra
     }
     bool ok = n > 0 && send_all(fd, head, static_cast<size_t>(n));
     char buf[65536];
-    while (ok && length > 0) {
+    while (ok && !head_only && length > 0) {
         size_t want = static_cast<size_t>(std::min<off_t>(length, sizeof(buf)));
         size_t got = fread(buf, 1, want, fp);
         if (!got) { ok = false; break; }
@@ -411,6 +414,7 @@ static void handle_client(int fd) {
     if (sp1 == std::string::npos || sp2 == std::string::npos) { json_error(fd, 400, "Invalid request line"); return; }
     std::string method = first.substr(0, sp1);
     std::string target = first.substr(sp1 + 1, sp2 - sp1 - 1);
+    std::string route_path = target.substr(0, target.find('?'));
     size_t body_pos = header_end + 4;
     size_t body_have = used > body_pos ? used - body_pos : 0;
     std::string length_text = header_value(headers, "Content-Length");
@@ -423,11 +427,11 @@ static void handle_client(int fd) {
             send_file(fd, "/app0/web/style.css", "text/css; charset=utf-8");
         } else if (target == "/app.js") {
             send_file(fd, "/app0/web/app.js", "application/javascript; charset=utf-8");
-        } else if (target == "/api/status") {
+        } else if (route_path == "/api/status") {
             std::string body = std::string("{\"status\":\"online\",\"ip\":\"") + g_ip +
                 "\",\"port\":12800,\"install_ready\":" + (g_install_ready ? "true" : "false") + "}";
             response(fd, 200, "OK", "application/json; charset=utf-8", body);
-        } else if (target.rfind("/api/progress", 0) == 0) {
+        } else if (route_path == "/api/progress") {
             OrbisBgftTaskProgress p{};
             int ret = (g_last_task >= 0 && g_bgft_progress) ? g_bgft_progress(g_last_task, &p) : -1;
             if (ret != 0) {
@@ -450,7 +454,7 @@ static void handle_client(int fd) {
                 manifest_name.resize(manifest_name.size() - 5);
             }
             std::string manifest_path = "/data/ny0_uploads/" + manifest_name + ".json";
-            if (!safe_filename(manifest_name) || !send_file(fd, manifest_path.c_str(), "application/json; charset=utf-8")) {
+            if (!safe_filename(manifest_name) || !send_file(fd, manifest_path.c_str(), "application/json; charset=utf-8", method == "HEAD")) {
                 json_error(fd, 404, "Package manifest not found");
             }
         } else if (target.rfind("/download/", 0) == 0) {
@@ -501,7 +505,7 @@ static void handle_client(int fd) {
         return;
     }
 
-    if (target == "/api/install") {
+    if (route_path == "/api/install") {
         if (content_length == 0 || content_length > 4096) { json_error(fd, 400, "Invalid install request"); return; }
         std::string body;
         body.resize(content_length);
