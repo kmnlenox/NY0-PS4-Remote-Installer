@@ -421,12 +421,12 @@ static void handle_client(int fd) {
     size_t content_length = length_text.empty() ? 0 : static_cast<size_t>(strtoull(length_text.c_str(), nullptr, 10));
 
     if (method == "GET" || method == "HEAD") {
-        if (target == "/" || target == "/index.html") {
-            send_file(fd, "/app0/web/index.html", "text/html; charset=utf-8");
-        } else if (target == "/style.css") {
-            send_file(fd, "/app0/web/style.css", "text/css; charset=utf-8");
-        } else if (target == "/app.js") {
-            send_file(fd, "/app0/web/app.js", "application/javascript; charset=utf-8");
+        if (route_path == "/" || route_path == "/index.html") {
+            send_file(fd, "/app0/web/index.html", "text/html; charset=utf-8", method == "HEAD");
+        } else if (route_path == "/style.css") {
+            send_file(fd, "/app0/web/style.css", "text/css; charset=utf-8", method == "HEAD");
+        } else if (route_path == "/app.js") {
+            send_file(fd, "/app0/web/app.js", "application/javascript; charset=utf-8", method == "HEAD");
         } else if (route_path == "/api/status") {
             std::string body = std::string("{\"status\":\"online\",\"ip\":\"") + g_ip +
                 "\",\"port\":12800,\"install_ready\":" + (g_install_ready ? "true" : "false") + "}";
@@ -448,8 +448,8 @@ static void handle_client(int fd) {
                     p.preparingPercent, p.localCopyPercent, p.restSecTotal);
                 response(fd, 200, "OK", "application/json; charset=utf-8", body);
             }
-        } else if (target.rfind("/manifest/", 0) == 0) {
-            std::string manifest_name = target.substr(strlen("/manifest/"));
+        } else if (route_path.rfind("/manifest/", 0) == 0) {
+            std::string manifest_name = route_path.substr(strlen("/manifest/"));
             if (manifest_name.size() > 5 && manifest_name.substr(manifest_name.size() - 5) == ".json") {
                 manifest_name.resize(manifest_name.size() - 5);
             }
@@ -457,9 +457,9 @@ static void handle_client(int fd) {
             if (!safe_filename(manifest_name) || !send_file(fd, manifest_path.c_str(), "application/json; charset=utf-8", method == "HEAD")) {
                 json_error(fd, 404, "Package manifest not found");
             }
-        } else if (target.rfind("/download/", 0) == 0) {
-            std::string name = target.substr(strlen("/download/"));
-            if (!send_download(fd, name, header_value(headers, "Range"))) json_error(fd, 404, "Package file not found or invalid range");
+        } else if (route_path.rfind("/download/", 0) == 0) {
+            std::string name = route_path.substr(strlen("/download/"));
+            if (!send_download(fd, name, header_value(headers, "Range"), method == "HEAD")) json_error(fd, 404, "Package file not found or invalid range");
         } else {
             json_error(fd, 404, "Not found");
         }
