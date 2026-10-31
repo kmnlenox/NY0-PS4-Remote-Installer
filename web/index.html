@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101114">
+  <title>NY0 Remote Installer</title>
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="top">
+      <div class="brand"><span class="mark">NY0</span><span>REMOTE INSTALLER</span></div>
+      <span class="local"><i></i> LOCAL NETWORK</span>
+    </header>
+    <section class="hero">
+      <p class="eyebrow">PLAYSTATION 4 · REMOTE PACKAGE</p>
+      <h1>Package<br><span>installer.</span></h1>
+      <p class="muted">Send a PKG from your iPhone to your PS4 over your private Wi-Fi network.</p>
+    </section>
+    <section class="panel">
+      <label class="field-label" for="pkg">SELECT PACKAGE</label>
+      <input id="pkg" type="file" accept=".pkg,application/octet-stream">
+      <div id="file-info" class="file-info">No package selected</div>
+      <button id="upload" disabled>UPLOAD PACKAGE</button>
+      <div class="progress"><div id="bar"></div></div>
+      <p id="status" role="status">Waiting for a compatible PS4 bridge.</p>
+    </section>
+    <section class="notice">
+      <strong>Installation is not enabled yet</strong>
+      <p>This interface is a frontend prototype. It will not report success until a PS4-side service and a verified GoldHEN installation adapter are available.</p>
+    </section>
+    <footer>NY0 SYSTEMS <span>·</span> PRIVATE LAN ONLY</footer>
+  </main>
+  <script src="./app.js"></script>
+</body>
+</html>
