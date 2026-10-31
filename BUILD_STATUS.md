@@ -1,33 +1,28 @@
-# Build and compatibility status
+# Build and test status
 
-Updated: 2026-10-31
+## Implemented in source
 
-## Current milestone
+- [x] PS4 HTTP server on TCP 12800
+- [x] Safari static UI routes
+- [x] Chunked upload endpoint with filename/path validation
+- [x] HTTP byte-range delivery endpoint for uploaded PKGs
+- [x] BGFT service symbol loading, task registration/start, and progress endpoint
+- [x] SFO metadata aligned to the OpenOrbis Remote Package Installer convention (`CATEGORY=gd`, `ATTRIBUTE=0`, standard paid ID; no custom authinfo blob)
 
-The repository is being prepared for a reproducible OpenOrbis PS4 homebrew package build. The first package is a diagnostic shell only; it is not yet the remote installer.
+## Verification boundary
 
-## Verified from upstream documentation
+- [ ] Latest source compiles successfully
+- [ ] PKG passes OpenOrbis validation
+- [ ] Package installs on the user's PS4
+- [ ] App launches and reports BGFT ready
+- [ ] Safari can upload a real PKG
+- [ ] PS4 BGFT task downloads and installs the uploaded PKG
 
-- OpenOrbis provides a PS4 homebrew toolchain and sample Makefile/build workflow.
-- GoldHEN release notes list Remote Package Install, FTP on port 2121, and BinLoader on port 9090.
-- GoldHEN's README describes internal PKG installation support under `/data/pkg`.
-- GoldHEN warns that BinLoader is experimental and that payloads may crash the console.
+A GitHub Actions success only proves the build and PKG validation steps. It does not prove runtime compatibility. Do not describe the installer as console-tested until the final four checks are completed on hardware.
 
-## Not yet verified
+## Known constraints
 
-- A documented, stable HTTP upload endpoint provided by the user's GoldHEN build.
-- A supported local API/command that this homebrew can invoke to install an uploaded PKG.
-- Compatibility of the user's reported PS4 firmware 13.52 with the exact GoldHEN build in use.
-- Runtime operation on the user's console.
-
-## Hard rule
-
-The application must fail closed when the installation backend is unavailable. It must never show “Installed” based only on a successful HTTP upload or file write.
-
-## Next engineering tasks
-
-1. Confirm the OpenOrbis package builds in GitHub Actions.
-2. Implement and test a PS4-side HTTP server using APIs available in the OpenOrbis SDK.
-3. Verify the exact GoldHEN Remote Package Install interface from authoritative source or console-side testing.
-4. Connect the frontend to that backend and expose real transfer/install states.
-5. Test on the target console before marking any release as usable.
+- Upload filenames must begin with the 36-character PS4 Content ID; the app uses this to register the BGFT task.
+- Keep NY0 running while the PS4 download manager fetches the uploaded file from the app's local HTTP server.
+- The service is intended for a trusted LAN or private VPN. Do not expose it to the public internet.
+- The final install result is reported by the PS4 system notification; the web UI reports BGFT transfer progress, not a fabricated success state.
