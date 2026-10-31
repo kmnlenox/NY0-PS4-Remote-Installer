@@ -270,18 +270,84 @@ static bool init_bgft() {
     return true;
 }
 
+static uint32_t read_be32(const uint8_t* p) {
+    return (static_cast<uint32_t>(p[0]) << 24) |
+           (static_cast<uint32_t>(p[1]) << 16) |
+           (static_cast<uint32_t>(p[2]) << 8) |
+           static_cast<uint32_t>(p[3]);
+}
+
+static uint64_t read_be64(const uint8_t* p) {
+    return (static_cast<uint64_t>(read_be32(p)) << 32) | read_be32(p + 4);
+}
+
+static void bytes_to_hex(char* out, const uint8_t* bytes, size_t count) {
+    static const char hex[] = "0123456789abcdef";
+    for (size_t i = 0; i < count; ++i) {
+        out[i * 2] = hex[bytes[i] >> 4];
+        out[i * 2 + 1] = hex[bytes[i] & 0x0f];
+    }
+    out[count * 2] = 0;
+}
+
 static bool start_install(const std::string& name, int* task_out, int* error_out) {
+    if (error_out) *error_out = -1;
     if (!g_install_ready || !g_bgft_register || !g_bgft_start) return false;
     if (!safe_filename(name)) return false;
 
     std::string path = "/data/ny0_uploads/" + name;
     struct stat st{};
-    if (stat(path.c_str(), &st) != 0 || st.st_size <= 0 || static_cast<unsigned long long>(st.st_size) > 0xFFFFFFFFull) return false;
+    if (stat(path.c_str(), &st) != 0 || st.st_size < 0x2000 ||
+        static_cast<unsigned long long>(st.st_size) > 0xFFFFFFFFull) return false;
 
-    const size_t content_id_length = 36;
-    if (name.size() < content_id_length + 4 || name[6] != '-' || name[16] != '_' || name[19] != '-') return false;
-    std::string content_id = name.substr(0, content_id_length);
-    std::string url = std::string("http://") + g_ip + ":" + std::to_string(SERVER_PORT) + "/download/" + name;
+    uint8_t header[0x2000];
+    FILE* pkg = fopen(path.c_str(), "rb");
+    if (!pkg) return false;
+    size_t header_size = fread(header, 1, sizeof(header), pkg);
+    fclose(pkg);
+    if (header_size != sizeof(header) ||
+        header[0] != 0x7f || header[1] != 'C' || header[2] != 'N' || header[3] != 'T') return false;
+
+    uint64_t package_size = read_be64(header + 0x430);
+    if (package_size == 0 || package_size != static_cast<uint64_t>(st.st_size) ||
+        package_size > 0xFFFFFFFFull) return false;
+
+    char content_id[37];
+    memcpy(content_id, header + 0x40, 36);
+    content_id[36] = 0;
+    if (content_id[6] != '-' || content_id[16] != '_' || content_id[19] != '-') return false;
+
+    const char* package_type = nullptr;
+    switch (read_be32(header + 0x74)) {
+        case 0x1A: package_type = "PS4GD"; break;
+        case 0x1B: package_type = "PS4AC"; break;
+        case 0x1C: package_type = "PS4AL"; break;
+        case 0x1E: package_type = "PS4DP"; break;
+        default: return false;
+    }
+
+    char package_digest[65];
+    bytes_to_hex(package_digest, header + 0xFE0, 32);
+    char piece_digest[41];
+    memset(piece_digest, '0', 40);
+    piece_digest[40] = 0;
+
+    std::string package_url = std::string("http://") + g_ip + ":" +
+        std::to_string(SERVER_PORT) + "/download/" + name;
+    std::string manifest_url = std::string("http://") + g_ip + ":" +
+        std::to_string(SERVER_PORT) + "/manifest/" + name + ".json";
+    std::string manifest_path = path + ".json";
+
+    FILE* manifest = fopen(manifest_path.c_str(), "wb");
+    if (!manifest) return false;
+    int manifest_written = fprintf(manifest,
+        "{\"originalFileSize\":%llu,\"packageDigest\":\"%s\","
+        "\"numberOfSplitFiles\":1,\"pieces\":[{\"url\":\"%s\","
+        "\"fileOffset\":0,\"fileSize\":%llu,\"hashValue\":\"%s\"}]}",
+        static_cast<unsigned long long>(package_size), package_digest,
+        package_url.c_str(), static_cast<unsigned long long>(package_size), piece_digest);
+    bool manifest_ok = manifest_written > 0 && fclose(manifest) == 0;
+    if (!manifest_ok) return false;
 
     int user_id = -1;
     int ret = g_user_get_foreground ? g_user_get_foreground(&user_id) : -1;
@@ -290,15 +356,15 @@ static bool start_install(const std::string& name, int* task_out, int* error_out
     OrbisBgftDownloadParam params{};
     params.userId = user_id;
     params.entitlementType = 5;
-    params.id = content_id.c_str();
-    params.contentUrl = url.c_str();
+    params.id = content_id;
+    params.contentUrl = manifest_url.c_str();
     params.contentName = name.c_str();
     params.iconPath = "";
     params.option = ORBIS_BGFT_TASK_OPT_DISABLE_CDN_QUERY_PARAM;
     params.playgoScenarioId = "0";
-    params.packageType = "PS4GD";
+    params.packageType = package_type;
     params.packageSubType = "";
-    params.packageSize = static_cast<uint32_t>(st.st_size);
+    params.packageSize = static_cast<uint32_t>(package_size);
 
     OrbisBgftTaskId task = -1;
     ret = g_bgft_register(&params, &task);
@@ -361,6 +427,15 @@ static void handle_client(int fd) {
                     g_last_task, p.errorResult, p.transferredTotal, p.lengthTotal,
                     p.preparingPercent, p.localCopyPercent, p.restSecTotal);
                 response(fd, 200, "OK", "application/json; charset=utf-8", body);
+            }
+        } else if (target.rfind("/manifest/", 0) == 0) {
+            std::string manifest_name = target.substr(strlen("/manifest/"));
+            if (manifest_name.size() > 5 && manifest_name.substr(manifest_name.size() - 5) == ".json") {
+                manifest_name.resize(manifest_name.size() - 5);
+            }
+            std::string manifest_path = "/data/ny0_uploads/" + manifest_name + ".json";
+            if (!safe_filename(manifest_name) || !send_file(fd, manifest_path.c_str(), "application/json; charset=utf-8")) {
+                json_error(fd, 404, "Package manifest not found");
             }
         } else if (target.rfind("/download/", 0) == 0) {
             std::string name = target.substr(strlen("/download/"));
