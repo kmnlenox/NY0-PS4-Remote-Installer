@@ -71,7 +71,7 @@ jobs:
       - name: Upload validated package
         uses: actions/upload-artifact@v4
         with:
-          name: ny0-remote-installer-diagnostic-fpkg
+          name: ny0-remote-installer-fpkg
           path: |
             ps4/IV0000-NY0R00001_00-NY0REMOTEINSTALL.pkg
             ps4/eboot.bin
