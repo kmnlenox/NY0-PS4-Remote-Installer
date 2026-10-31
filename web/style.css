@@ -10,3 +10,5 @@ button{width:100%;border:0;border-radius:12px;padding:17px;background:var(--acce
 .progress{height:5px;background:#30333b;border-radius:9px;margin-top:18px;overflow:hidden}.progress div{height:100%;width:0;background:var(--accent);transition:width .15s}
 #status{color:var(--muted);font-size:12px;line-height:1.5;margin:12px 0 0}.notice{margin-top:14px;border-color:#554a2c}.notice strong{font-size:13px}.notice p{font-size:12px;line-height:1.5;color:var(--muted);margin-bottom:0}
 footer{text-align:center;color:#656a74;font-size:9px;letter-spacing:.15em;padding:32px 0 0}footer span{color:var(--accent);padding:0 5px}
+
+.local.ready i{background:#a8d94c;box-shadow:0 0 10px #a8d94c55}.local:not(.ready) i{background:#d5a34b}
