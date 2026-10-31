@@ -207,8 +207,8 @@ static bool init_bgft() {
     if (sceKernelDlsym(g_bgft_module, "sceBgftServiceInit", reinterpret_cast<void**>(&g_bgft_init)) != 0) return false;
     if (sceKernelDlsym(g_bgft_module, "sceBgftServiceTerm", reinterpret_cast<void**>(&g_bgft_term)) != 0) return false;
     if (sceKernelDlsym(g_bgft_module, "sceBgftServiceDownloadRegisterTask", reinterpret_cast<void**>(&g_bgft_register)) != 0) return false;
-    if (sceKernelDlsym(g_bgft_module, "sceBgftServiceDownloadStartTask", reinterpret_cast<void**>(&g_bgft_start)) != 0) return false;
-    if (sceKernelDlsym(g_bgft_module, "sceBgftServiceDownloadGetProgress", reinterpret_cast<void**>(&g_bgft_progress)) != 0) return false;
+    if (sceKernelDlsym(g_bgft_module, "sceBgftServiceIntDownloadStartTask", reinterpret_cast<void**>(&g_bgft_start)) != 0) return false;
+    if (sceKernelDlsym(g_bgft_module, "sceBgftServiceIntDownloadGetProgress", reinterpret_cast<void**>(&g_bgft_progress)) != 0) return false;
 
     g_bgft_params.heapSize = BGFT_HEAP_SIZE;
     g_bgft_params.heap = malloc(g_bgft_params.heapSize);
