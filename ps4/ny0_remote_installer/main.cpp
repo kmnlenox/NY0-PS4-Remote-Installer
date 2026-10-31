@@ -71,57 +71,6 @@ static constexpr int SERVER_PORT = 12800;
 static constexpr size_t UPLOAD_CHUNK_MAX = 2 * 1024 * 1024;
 static constexpr uint32_t BGFT_HEAP_SIZE = 1024 * 1024;
 
-static constexpr int SERVER_PORT = 12800;
-static constexpr size_t UPLOAD_CHUNK_MAX = 2 * 1024 * 1024;
-static constexpr uint32_t BGFT_HEAP_SIZE = 1024 * 1024;
-
-struct OrbisBgftInitParams { void* heap; size_t heapSize; };
-using OrbisBgftTaskId = int32_t;
-enum { ORBIS_BGFT_TASK_OPT_DISABLE_CDN_QUERY_PARAM = 0x10000 };
-struct OrbisBgftDownloadParam {
-    int32_t userId;
-    int32_t entitlementType;
-    const char* id;
-    const char* contentUrl;
-    const char* contentExUrl;
-    const char* contentName;
-    const char* iconPath;
-    const char* skuId;
-    int32_t option;
-    const char* playgoScenarioId;
-    const char* releaseDate;
-    const char* packageType;
-    const char* packageSubType;
-    uint32_t packageSize;
-};
-struct OrbisBgftTaskProgress {
-    uint32_t bits;
-    int32_t errorResult;
-    uint32_t length;
-    uint32_t transferred;
-    uint32_t lengthTotal;
-    uint32_t transferredTotal;
-    uint32_t numIndex;
-    uint32_t numTotal;
-    uint32_t restSec;
-    uint32_t restSecTotal;
-    int32_t preparingPercent;
-    int32_t localCopyPercent;
-};
-using BgftInitFn = int32_t (*)(OrbisBgftInitParams*);
-using BgftTermFn = int32_t (*)();
-using BgftRegisterFn = int32_t (*)(OrbisBgftDownloadParam*, OrbisBgftTaskId*);
-using BgftStartFn = int32_t (*)(OrbisBgftTaskId);
-using BgftProgressFn = int32_t (*)(OrbisBgftTaskId, OrbisBgftTaskProgress*);
-using NetInitFn = int32_t (*)();
-using NetPoolCreateFn = int32_t (*)(const char*, int32_t, int32_t);
-using NetCtlGetInfoFn = int32_t (*)(int32_t, void*);
-using UserInitFn = int32_t (*)(void*);
-using UserGetForegroundFn = int32_t (*)(int32_t*);
-using AppInstInitFn = int32_t (*)();
-union Ny0NetCtlInfo { char ip_address[16]; char proxy_server[256]; };
-static constexpr int ORBIS_NET_CTL_INFO_IP_ADDRESS = 14;
-
 static BgftInitFn g_bgft_init = nullptr;
 static BgftTermFn g_bgft_term = nullptr;
 static BgftRegisterFn g_bgft_register = nullptr;
