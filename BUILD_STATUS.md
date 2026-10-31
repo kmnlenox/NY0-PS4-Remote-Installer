@@ -2,9 +2,9 @@
 
 ## Latest completed native build
 
-- GitHub Actions run: [#54 — successful build and header verification](https://github.com/kmnlenox/NY0-PS4-Remote-Installer/actions/runs/41252005156)
-- Artifact: [ny0-remote-installer-fpkg](https://github.com/kmnlenox/NY0-PS4-Remote-Installer/actions/runs/41252005156/artifacts/13061204109)
-- PKG SHA-256: `e5810569238870f202e895848eba2de74cd0061df0db191b1cc490d8ad015db3`
+- GitHub Actions run: [#61 — successful build and header verification](https://github.com/kmnlenox/NY0-PS4-Remote-Installer/actions/runs/41252199405)
+- Artifact: [ny0-remote-installer-fpkg](https://github.com/kmnlenox/NY0-PS4-Remote-Installer/actions/runs/41252199405/artifacts/13061970637)
+- PKG SHA-256: `bd4cbf381aee98354dcbf95e0a8fadf4c7a506723b014a9c7fa9d3780357b53c`
 - PKG size: 6,619,136 bytes
 - The C++ executable compiled and linked; OpenOrbis generated the fSELF/PKG; `PkgTool.Core pkg_validate` passed, including PKG header and Debug RIF signature checks.
 - The independent PKG-header test passed: Content ID `IV0000-NY0R00001_00-NY0REMOTEINSTALL`, content type `0x1A` (PS4GD), size `6,619,136`, and a non-empty package digest. These are the fields the runtime BGFT manifest builder reads.
