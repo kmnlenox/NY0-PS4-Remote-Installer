@@ -17,13 +17,6 @@ function safeName(name) {
   return name.replace(/[^A-Za-z0-9._-]/g, "_");
 }
 
-function hasContentIdPrefix(name) {
-  return name.length >= 40 &&
-    name[6] === "-" &&
-    name[16] === "_" &&
-    name[19] === "-" &&
-    name.toLowerCase().endsWith(".pkg");
-}
 
 async function checkService() {
   try {
@@ -62,19 +55,14 @@ picker.addEventListener("change", () => {
   info.textContent = file.name + " · " + (file.size / 1024 / 1024).toFixed(1) + " MB";
   if (!file.name.toLowerCase().endsWith(".pkg")) {
     setStatus("Choose a .pkg file.");
-  } else if (!hasContentIdPrefix(name)) {
-    setStatus("This filename does not appear to start with a PS4 Content ID. Rename it to the package Content ID before installing.");
   } else {
-    setStatus("Package selected. Ready to upload.");
+    setStatus("Package selected. NY0 reads the Content ID and digest from the PKG header automatically.");
   }
   updateButton();
 });
 
 async function uploadPackage(file) {
   const name = safeName(file.name);
-  if (!hasContentIdPrefix(name)) {
-    throw new Error("Filename must begin with the package Content ID (36 characters) before .pkg.");
-  }
   let offset = 0;
   while (offset < file.size) {
     const end = Math.min(offset + CHUNK_SIZE, file.size);
