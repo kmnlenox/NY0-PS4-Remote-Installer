@@ -23,7 +23,7 @@ jobs:
           docker run --rm \
             -w /workspace/ps4 \
             -v "$GITHUB_WORKSPACE:/workspace" \
-            openorbis/toolchain:v0.5.4 \
+            openorbisofficial/toolchain:latest \
             bash -lc "make"
 
       - name: Upload build outputs
