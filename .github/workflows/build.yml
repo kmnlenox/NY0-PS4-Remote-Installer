@@ -56,6 +56,9 @@ jobs:
               test -x tools/create-gp4
               test -x "$OO_PS4_TOOLCHAIN/bin/linux/create-eboot"
               test -x "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core"
+              echo "=== create-eboot help ==="
+              "$OO_PS4_TOOLCHAIN/bin/linux/create-eboot" --help || true
+              "$OO_PS4_TOOLCHAIN/bin/linux/create-eboot" -h || true
               make clean
               make
               "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core" pkg_validate IV0000-NY0R00001_00-NY0REMOTEINSTALL.pkg
