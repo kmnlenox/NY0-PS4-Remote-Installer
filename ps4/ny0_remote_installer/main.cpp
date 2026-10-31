@@ -601,49 +601,19 @@ static bool init_system_services() {
 int main() {
     setvbuf(stdout, nullptr, _IONBF, 0);
     signal(SIGPIPE, SIG_IGN);
-    printf("NY0 Remote Installer starting...\n");
-
-    if (!init_system_services()) {
-        printf("System service initialization incomplete.\n");
-    }
-    if (!init_network()) {
-        printf("Network initialization failed.\n");
-        for (;;) sceKernelUsleep(1000000);
-    }
 
     mkdir("/data/ny0_uploads", 0777);
-    int server = socket(AF_INET, SOCK_STREAM, 0);
-    if (server < 0) {
-        printf("socket() failed\n");
-        for (;;) sceKernelUsleep(1000000);
-    }
-    int yes = 1;
-    setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(yes));
-    struct sockaddr_in addr{};
-    addr.sin_len = sizeof(addr);
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(SERVER_PORT);
-    addr.sin_addr.s_addr = htonl(INADDR_ANY);
-    if (bind(server, reinterpret_cast<struct sockaddr*>(&addr), sizeof(addr)) != 0 || listen(server, 4) != 0) {
-        printf("Cannot listen on port %d\n", SERVER_PORT);
-        close(server);
-        for (;;) sceKernelUsleep(1000000);
+    FILE* log = fopen("/data/ny0_startup.log", "w");
+    printf("NY0 diagnostic launch test started.\\n");
+    if (log) {
+        fprintf(log, "NY0 diagnostic launch test started.\\n");
+        fflush(log);
     }
 
-    printf("NY0 HTTP server: http://%s:%d (install adapter: %s)\n",
-        g_ip, SERVER_PORT, g_install_ready ? "ready" : "unavailable");
-
+    // Deliberately do not load system modules, initialize BGFT, or open sockets.
+    // This isolates executable/SELF launch from the service and network code.
     for (;;) {
-        struct sockaddr_in peer{};
-        socklen_t peer_len = sizeof(peer);
-        int client = accept(server, reinterpret_cast<struct sockaddr*>(&peer), &peer_len);
-        if (client < 0) {
-            sceKernelUsleep(10000);
-            continue;
-        }
-        handle_client(client);
-        shutdown(client, SHUT_RDWR);
-        close(client);
+        sceKernelUsleep(1000000);
     }
     return 0;
 }
