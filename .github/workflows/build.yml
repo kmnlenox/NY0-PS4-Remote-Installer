@@ -68,13 +68,13 @@ jobs:
               test -s web/app.js
               make clean
               make
-              "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core" pkg_validate IV0000-NY0R00001_00-NY0REMOTEINSTALL.pkg
-              sha256sum IV0000-NY0R00001_00-NY0REMOTEINSTALL.pkg
-              ls -lh IV0000-NY0R00001_00-NY0REMOTEINSTALL.pkg eboot.bin'
+              "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core" pkg_validate IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg
+              sha256sum IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg
+              ls -lh IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg eboot.bin'
         working-directory: ps4
 
       - name: Verify PKG header fields used by the runtime BGFT manifest builder
-        run: python3 tools/verify_pkg_header.py IV0000-NY0R00001_00-NY0REMOTEINSTALL.pkg
+        run: python3 tools/verify_pkg_header.py IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg
         working-directory: ps4
 
       - name: Upload validated package
@@ -82,7 +82,7 @@ jobs:
         with:
           name: ny0-remote-installer-fpkg
           path: |
-            ps4/IV0000-NY0R00001_00-NY0REMOTEINSTALL.pkg
+            ps4/IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg
             ps4/eboot.bin
           if-no-files-found: error
           retention-days: 14
