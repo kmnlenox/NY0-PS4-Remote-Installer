@@ -1,10 +1,4 @@
 #include <orbis/libkernel.h>
-#include <orbis/Sysmodule.h>
-#include <orbis/Net.h>
-#include <cctype>
-#include <orbis/AppInstUtil.h>
-#include <orbis/Bgft.h>
-#include <orbis/UserService.h>
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -17,17 +11,64 @@
 #include <cstdlib>
 #include <cstring>
 #include <cstdint>
+#include <cctype>
 #include <string>
 #include <vector>
 #include <algorithm>
 
-// OpenOrbis NetCtl.h currently includes a missing sys/stdint.h in the container SDK.
-// Keep the small ABI surface used here local rather than including that header.
-#define ORBIS_NET_CTL_INFO_IP_ADDRESS 14
+struct OrbisBgftInitParams { void* heap; size_t heapSize; };
+using OrbisBgftTaskId = int32_t;
+enum { ORBIS_BGFT_TASK_OPT_DISABLE_CDN_QUERY_PARAM = 0x10000 };
+struct OrbisBgftDownloadParam {
+    int32_t userId;
+    int32_t entitlementType;
+    const char* id;
+    const char* contentUrl;
+    const char* contentExUrl;
+    const char* contentName;
+    const char* iconPath;
+    const char* skuId;
+    int32_t option;
+    const char* playgoScenarioId;
+    const char* releaseDate;
+    const char* packageType;
+    const char* packageSubType;
+    uint32_t packageSize;
+};
+struct OrbisBgftTaskProgress {
+    uint32_t bits;
+    int32_t errorResult;
+    uint32_t length;
+    uint32_t transferred;
+    uint32_t lengthTotal;
+    uint32_t transferredTotal;
+    uint32_t numIndex;
+    uint32_t numTotal;
+    uint32_t restSec;
+    uint32_t restSecTotal;
+    int32_t preparingPercent;
+    int32_t localCopyPercent;
+};
+
+using BgftInitFn = int32_t (*)(OrbisBgftInitParams*);
+using BgftTermFn = int32_t (*)();
+using BgftRegisterFn = int32_t (*)(OrbisBgftDownloadParam*, OrbisBgftTaskId*);
+using BgftStartFn = int32_t (*)(OrbisBgftTaskId);
+using BgftProgressFn = int32_t (*)(OrbisBgftTaskId, OrbisBgftTaskProgress*);
+using NetInitFn = int32_t (*)();
+using NetCtlInitFn = int32_t (*)();
+using NetPoolCreateFn = int32_t (*)(const char*, int32_t, int32_t);
+using NetCtlGetInfoFn = int32_t (*)(int32_t, void*);
+using UserInitFn = int32_t (*)(void*);
+using UserGetForegroundFn = int32_t (*)(int32_t*);
+using AppInstInitFn = int32_t (*)();
+
 union Ny0NetCtlInfo { char ip_address[16]; char proxy_server[256]; };
-extern "C" int32_t sceNetCtlInit();
-extern "C" void sceNetCtlTerm();
-extern "C" int32_t sceNetCtlGetInfo(int32_t code, Ny0NetCtlInfo* info);
+static constexpr int ORBIS_NET_CTL_INFO_IP_ADDRESS = 14;
+
+static constexpr int SERVER_PORT = 12800;
+static constexpr size_t UPLOAD_CHUNK_MAX = 2 * 1024 * 1024;
+static constexpr uint32_t BGFT_HEAP_SIZE = 1024 * 1024;
 
 static constexpr int SERVER_PORT = 12800;
 static constexpr size_t UPLOAD_CHUNK_MAX = 2 * 1024 * 1024;
@@ -86,6 +127,7 @@ static BgftRegisterFn g_bgft_register = nullptr;
 static BgftStartFn g_bgft_start = nullptr;
 static BgftProgressFn g_bgft_progress = nullptr;
 static NetInitFn g_net_init = nullptr;
+static NetCtlInitFn g_netctl_init = nullptr;
 static NetPoolCreateFn g_net_pool_create = nullptr;
 static NetCtlGetInfoFn g_netctl_get_info = nullptr;
 static UserInitFn g_user_init = nullptr;
@@ -454,10 +496,11 @@ static bool init_network() {
     g_netctl_module = load_module("/system/common/lib/libSceNetCtl.sprx");
     g_net_module = load_module("/system/common/lib/libSceNet.sprx");
     if (g_netctl_module <= 0 || g_net_module <= 0) return false;
-    if (!resolve_symbol(g_netctl_module, "sceNetCtlInit", reinterpret_cast<void**>(&g_net_init))) return false;
+    if (!resolve_symbol(g_netctl_module, "sceNetCtlInit", reinterpret_cast<void**>(&g_netctl_init))) return false;
     if (!resolve_symbol(g_netctl_module, "sceNetCtlGetInfo", reinterpret_cast<void**>(&g_netctl_get_info))) return false;
     if (!resolve_symbol(g_net_module, "sceNetInit", reinterpret_cast<void**>(&g_net_init))) return false;
     if (!resolve_symbol(g_net_module, "sceNetPoolCreate", reinterpret_cast<void**>(&g_net_pool_create))) return false;
+    if (g_netctl_init() != 0) return false;
     if (g_net_init() != 0) return false;
     g_net_pool = g_net_pool_create("ny0_remote_installer", 1024 * 1024, 0);
     if (g_net_pool < 0) return false;
