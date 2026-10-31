@@ -5,7 +5,7 @@ CONTENT_ID  := IV0000-NY0R00001_00-NY0REMOTEINSTALL
 
 LIBS        := -lc -lkernel -lc++
 TOOLCHAIN   := $(OO_PS4_TOOLCHAIN)
-PROJDIR     := $(shell basename $(CURDIR))
+PROJDIR     := ny0_remote_installer
 INTDIR      := $(PROJDIR)/x64/Debug
 CPPFILES    := $(wildcard $(PROJDIR)/*.cpp)
 OBJS        := $(patsubst $(PROJDIR)/%.cpp,$(INTDIR)/%.o,$(CPPFILES))
