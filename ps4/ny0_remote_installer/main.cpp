@@ -96,6 +96,12 @@ static int32_t g_appinst_module = -1;
 static int32_t g_net_pool = -1;
 static char g_ip[16] = "0.0.0.0";
 static bool g_install_ready = false;
+static FILE* g_startup_log = nullptr;
+
+static void startup_log(const char* message) {
+    printf("%s\\n", message);
+    if (g_startup_log) { fprintf(g_startup_log, "%s\\n", message); fflush(g_startup_log); }
+}
 static OrbisBgftInitParams g_bgft_params{};
 static int32_t g_last_task = -1;
 
@@ -251,7 +257,9 @@ static bool send_download(int fd, const std::string& name, const std::string& ra
 }
 
 static int32_t load_module(const char* path) {
-    return static_cast<int32_t>(sceKernelLoadStartModule(path, 0, nullptr, 0, nullptr, nullptr));
+    int32_t id = static_cast<int32_t>(sceKernelLoadStartModule(path, 0, nullptr, 0, nullptr, nullptr));
+    if (g_startup_log) { fprintf(g_startup_log, "load_module %s => %d\\n", path, id); fflush(g_startup_log); }
+    return id;
 }
 
 static bool resolve_symbol(int32_t module, const char* name, void** out) {
