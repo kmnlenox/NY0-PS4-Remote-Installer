@@ -261,7 +261,7 @@ static bool init_bgft() {
     if (!resolve_symbol(g_bgft_module, "sceBgftServiceInit", reinterpret_cast<void**>(&g_bgft_init))) return false;
     if (!resolve_symbol(g_bgft_module, "sceBgftServiceTerm", reinterpret_cast<void**>(&g_bgft_term))) return false;
     if (!resolve_symbol(g_bgft_module, "sceBgftServiceDownloadRegisterTask", reinterpret_cast<void**>(&g_bgft_register))) return false;
-    if (!resolve_symbol(g_bgft_module, "sceBgftServiceIntDebugDownloadRegisterPkg", reinterpret_cast<void**>(&g_bgft_debug_register))) return false;
+    resolve_symbol(g_bgft_module, "sceBgftServiceIntDebugDownloadRegisterPkg", reinterpret_cast<void**>(&g_bgft_debug_register));
     if (!resolve_symbol(g_bgft_module, "sceBgftServiceIntDownloadStartTask", reinterpret_cast<void**>(&g_bgft_start))) return false;
     if (!resolve_symbol(g_bgft_module, "sceBgftServiceIntDownloadGetProgress", reinterpret_cast<void**>(&g_bgft_progress))) return false;
 
