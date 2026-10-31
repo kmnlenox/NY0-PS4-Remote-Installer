@@ -12,6 +12,7 @@
 #include <cstring>
 #include <cstdint>
 #include <cctype>
+#include <csignal>
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -591,6 +592,7 @@ static bool init_system_services() {
 
 int main() {
     setvbuf(stdout, nullptr, _IONBF, 0);
+    signal(SIGPIPE, SIG_IGN);
     printf("NY0 Remote Installer starting...\n");
 
     if (!init_system_services()) {
@@ -631,8 +633,6 @@ int main() {
             sceKernelUsleep(10000);
             continue;
         }
-        int no_sigpipe = 1;
-        setsockopt(client, SOL_SOCKET, SO_NOSIGPIPE, &no_sigpipe, sizeof(no_sigpipe));
         handle_client(client);
         shutdown(client, SHUT_RDWR);
         close(client);
