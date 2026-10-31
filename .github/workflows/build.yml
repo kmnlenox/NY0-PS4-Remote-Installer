@@ -25,7 +25,7 @@ jobs:
             -w /workspace/ps4 \
             -v "$GITHUB_WORKSPACE:/workspace" \
             openorbisofficial/toolchain:latest \
-            bash -lc "echo '=== make_fself.py help ==='; python3 /lib/OpenOrbisSDK/scripts/make_fself.py --help || true; echo '=== PkgTool help ==='; /lib/OpenOrbisSDK/bin/linux/PkgTool.Core --help || true; echo '=== packaging scripts ==='; find /lib/OpenOrbisSDK -maxdepth 4 -type f | grep -Ei 'gp4|pkg|fself' | sort; echo '=== template GP4 ==='; sed -n '1,220p' /lib/OpenOrbisSDK/bin/data/template.gp4; make"
+            bash -lc "echo '=== container OS and interpreters ==='; cat /etc/os-release; command -v python python3 pypy3 || true; ls -l /usr/bin/python* 2>/dev/null || true; echo '=== make_fself.py source ==='; sed -n '1,260p' /lib/OpenOrbisSDK/scripts/make_fself.py; echo '=== template GP4 remainder ==='; sed -n '1,260p' /lib/OpenOrbisSDK/bin/data/template.gp4; echo '=== SDK bin contents ==='; ls -la /lib/OpenOrbisSDK/bin/linux; make"
 
       - name: Upload build outputs
         uses: actions/upload-artifact@v4
