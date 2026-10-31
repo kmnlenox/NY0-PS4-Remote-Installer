@@ -30,7 +30,7 @@ $(INTDIR)/%.o: $(PROJDIR)/%.cpp | $(INTDIR)
 
 eboot.bin: $(OBJS)
 	ld.lld $(INTDIR)/*.o -o $(INTDIR)/$(PROJDIR).elf $(LDFLAGS)
-	$(CREATE_EBOOT) -in=$(INTDIR)/$(PROJDIR).elf -out=$@ -paid=$(PAID)
+	$(CREATE_EBOOT) -in=$(INTDIR)/$(PROJDIR).elf -out=$@ -paid=$(PAID) -ptype=fake
 	test -s $@
 
 sce_sys/param.sfo: Makefile
