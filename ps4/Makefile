@@ -3,7 +3,7 @@ VERSION     := 01.00
 TITLE_ID    := NY0R00001
 CONTENT_ID  := IV0000-NY0R00001_00-NY0REMOTEINSTALL
 
-LIBS        := -lc -lkernel -lc++ -lSceNet -lSceNetCtl -lSceSysmodule -lSceUserService -lSceAppInstUtil
+LIBS        := -lc -lkernel -lc++
 TOOLCHAIN   := $(OO_PS4_TOOLCHAIN)
 PROJDIR     := ny0_remote_installer
 INTDIR      := $(PROJDIR)/x64/Debug
