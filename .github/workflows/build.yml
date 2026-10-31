@@ -61,6 +61,11 @@ jobs:
               test -x tools/create-gp4
               test -x tools/create-fself
               test -x "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core"
+              mkdir -p web
+              cp -R /workspace/web/. web/
+              test -s web/index.html
+              test -s web/style.css
+              test -s web/app.js
               make clean
               make
               "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core" pkg_validate IV0000-NY0R00001_00-NY0REMOTEINSTALL.pkg
