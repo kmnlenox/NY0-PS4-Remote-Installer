@@ -3,7 +3,7 @@ VERSION     := 01.00
 TITLE_ID    := NY0R00001
 CONTENT_ID  := IV0000-NY0R00001_00-NY0REMOTEINSTALL
 
-LIBS        := -lc -lkernel -lc++
+LIBS        := -lc -lkernel -lc++ -lSceNet -lSceNetCtl -lSceSysmodule -lSceUserService -lSceAppInstUtil
 TOOLCHAIN   := $(OO_PS4_TOOLCHAIN)
 PROJDIR     := ny0_remote_installer
 INTDIR      := $(PROJDIR)/x64/Debug
@@ -14,7 +14,6 @@ CREATE_FSELF := tools/create-fself
 PKGTOOL     := $(TOOLCHAIN)/bin/$(CDIR)/PkgTool.Core
 CREATE_GP4  := tools/create-gp4
 PAID        := 0x3800000000000011
-# Match the executable-authentication metadata used by established OpenOrbis homebrew builds.
 
 CFLAGS      := --target=x86_64-pc-freebsd12-elf -fPIC -funwind-tables -c -isysroot $(TOOLCHAIN) -isystem $(TOOLCHAIN)/include
 CXXFLAGS    := $(CFLAGS) -isystem $(TOOLCHAIN)/include/c++/v1
@@ -31,7 +30,7 @@ $(INTDIR)/%.o: $(PROJDIR)/%.cpp | $(INTDIR)
 
 eboot.bin: $(OBJS)
 	ld.lld $(INTDIR)/*.o -o $(INTDIR)/$(PROJDIR).elf $(LDFLAGS)
-	$(CREATE_FSELF) -in=$(INTDIR)/$(PROJDIR).elf -out=$(INTDIR)/$(PROJDIR).oelf --eboot "eboot.bin" --paid $(PAID) 
+	$(CREATE_FSELF) -in=$(INTDIR)/$(PROJDIR).elf -out=$(INTDIR)/$(PROJDIR).oelf --eboot "eboot.bin" --paid $(PAID)
 	test -s $@
 
 sce_sys/param.sfo: Makefile
@@ -48,12 +47,12 @@ sce_sys/param.sfo: Makefile
 	$(PKGTOOL) sfo_setentry $@ TITLE_ID --type Utf8 --maxsize 12 --value '$(TITLE_ID)'
 	$(PKGTOOL) sfo_setentry $@ VERSION --type Utf8 --maxsize 8 --value '$(VERSION)'
 
-$(CONTENT_ID).pkg: eboot.bin sce_sys/param.sfo sce_sys/icon0.png pkg.gp4
+$(CONTENT_ID).pkg: eboot.bin sce_sys/param.sfo sce_sys/icon0.png web/index.html web/style.css web/app.js pkg.gp4
 	$(PKGTOOL) pkg_build pkg.gp4 .
 	test -s $@
 
-pkg.gp4: eboot.bin sce_sys/param.sfo sce_sys/icon0.png tools/create-gp4
-	$(CREATE_GP4) -out $@ --content-id=$(CONTENT_ID) --files "eboot.bin sce_sys/param.sfo sce_sys/icon0.png"
+pkg.gp4: eboot.bin sce_sys/param.sfo sce_sys/icon0.png web/index.html web/style.css web/app.js tools/create-gp4
+	$(CREATE_GP4) -out $@ --content-id=$(CONTENT_ID) --files "eboot.bin sce_sys/param.sfo sce_sys/icon0.png web/index.html web/style.css web/app.js"
 
 validate: $(CONTENT_ID).pkg
 	$(PKGTOOL) pkg_validate $(CONTENT_ID).pkg
