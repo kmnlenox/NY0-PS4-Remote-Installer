@@ -9,7 +9,8 @@ An iPhone Safari-controlled homebrew installer for user-owned PS4 PKG files over
 - Chunked upload from iPhone Safari to `/data/ny0_uploads`.
 - HTTP package delivery with byte-range support for the PS4 download manager.
 - BGFT task registration/start and progress reporting through the PS4 system service.
-- Package filename validation based on the 36-character PS4 Content ID prefix.
+- PKG header inspection to extract Content ID, package type, size and digest.
+- BGFT reference-manifest generation matching the Remote PKG Installer protocol.
 
 ## Use
 
