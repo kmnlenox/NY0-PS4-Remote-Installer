@@ -29,8 +29,8 @@ jobs:
           set -euo pipefail
           git clone --depth 1 https://github.com/OpenOrbis/create-gp4.git "$RUNNER_TEMP/create-gp4-source"
           mkdir -p "$GITHUB_WORKSPACE/ps4/tools"
-          cd "$RUNNER_TEMP/create-gp4-source"
-          GO111MODULE=off go build -trimpath -o "$GITHUB_WORKSPACE/ps4/tools/create-gp4" .
+          cd "$RUNNER_TEMP/create-gp4-source/cmd/create-gp4"
+          go build -trimpath -o "$GITHUB_WORKSPACE/ps4/tools/create-gp4" .
           test -x "$GITHUB_WORKSPACE/ps4/tools/create-gp4"
           "$GITHUB_WORKSPACE/ps4/tools/create-gp4" -h
 
