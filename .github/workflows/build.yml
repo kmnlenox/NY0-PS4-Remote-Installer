@@ -73,6 +73,10 @@ jobs:
               ls -lh IV0000-NY0R00001_00-NY0REMOTEINSTALL.pkg eboot.bin'
         working-directory: ps4
 
+      - name: Verify PKG header fields used by the runtime BGFT manifest builder
+        run: python3 tools/verify_pkg_header.py IV0000-NY0R00001_00-NY0REMOTEINSTALL.pkg
+        working-directory: ps4
+
       - name: Upload validated package
         uses: actions/upload-artifact@v4
         with:
