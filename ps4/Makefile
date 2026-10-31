@@ -1,4 +1,4 @@
-TITLE       := NY0 Remote Installer - Diagnostic
+TITLE       := NY0 Remote Installer
 VERSION     := 01.00
 TITLE_ID    := NY0R00001
 CONTENT_ID  := IV0000-NY0R00001_00-NY0REMOTEINSTALL
@@ -15,7 +15,6 @@ PKGTOOL     := $(TOOLCHAIN)/bin/$(CDIR)/PkgTool.Core
 CREATE_GP4  := tools/create-gp4
 PAID        := 0x3800000000000011
 # Match the executable-authentication metadata used by established OpenOrbis homebrew builds.
-AUTHINFO    := 000000000000000000000000001C004000FF000000000080000000000000000000000000000000000000008000400040000000000000008000000000000000080040FFFF000000F000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 
 CFLAGS      := --target=x86_64-pc-freebsd12-elf -fPIC -funwind-tables -c -isysroot $(TOOLCHAIN) -isystem $(TOOLCHAIN)/include
 CXXFLAGS    := $(CFLAGS) -isystem $(TOOLCHAIN)/include/c++/v1
@@ -32,7 +31,7 @@ $(INTDIR)/%.o: $(PROJDIR)/%.cpp | $(INTDIR)
 
 eboot.bin: $(OBJS)
 	ld.lld $(INTDIR)/*.o -o $(INTDIR)/$(PROJDIR).elf $(LDFLAGS)
-	$(CREATE_FSELF) -in=$(INTDIR)/$(PROJDIR).elf -out=$(INTDIR)/$(PROJDIR).oelf --eboot "eboot.bin" --paid $(PAID) --authinfo $(AUTHINFO)
+	$(CREATE_FSELF) -in=$(INTDIR)/$(PROJDIR).elf -out=$(INTDIR)/$(PROJDIR).oelf --eboot "eboot.bin" --paid $(PAID) 
 	test -s $@
 
 sce_sys/param.sfo: Makefile
@@ -40,8 +39,8 @@ sce_sys/param.sfo: Makefile
 	$(PKGTOOL) sfo_new $@
 	$(PKGTOOL) sfo_setentry $@ APP_TYPE --type Integer --maxsize 4 --value 1
 	$(PKGTOOL) sfo_setentry $@ APP_VER --type Utf8 --maxsize 8 --value '$(VERSION)'
-	$(PKGTOOL) sfo_setentry $@ ATTRIBUTE --type Integer --maxsize 4 --value 32
-	$(PKGTOOL) sfo_setentry $@ CATEGORY --type Utf8 --maxsize 4 --value 'gde'
+	$(PKGTOOL) sfo_setentry $@ ATTRIBUTE --type Integer --maxsize 4 --value 0
+	$(PKGTOOL) sfo_setentry $@ CATEGORY --type Utf8 --maxsize 4 --value 'gd'
 	$(PKGTOOL) sfo_setentry $@ CONTENT_ID --type Utf8 --maxsize 48 --value '$(CONTENT_ID)'
 	$(PKGTOOL) sfo_setentry $@ DOWNLOAD_DATA_SIZE --type Integer --maxsize 4 --value 0
 	$(PKGTOOL) sfo_setentry $@ SYSTEM_VER --type Integer --maxsize 4 --value 0
