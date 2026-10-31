@@ -53,6 +53,7 @@ struct OrbisBgftTaskProgress {
 using BgftInitFn = int32_t (*)(OrbisBgftInitParams*);
 using BgftTermFn = int32_t (*)();
 using BgftRegisterFn = int32_t (*)(OrbisBgftDownloadParam*, OrbisBgftTaskId*);
+using BgftDebugRegisterFn = int32_t (*)(OrbisBgftDownloadParam*, OrbisBgftTaskId*);
 using BgftStartFn = int32_t (*)(OrbisBgftTaskId);
 using BgftProgressFn = int32_t (*)(OrbisBgftTaskId, OrbisBgftTaskProgress*);
 using NetInitFn = int32_t (*)();
@@ -74,6 +75,7 @@ static constexpr uint32_t BGFT_HEAP_SIZE = 1024 * 1024;
 static BgftInitFn g_bgft_init = nullptr;
 static BgftTermFn g_bgft_term = nullptr;
 static BgftRegisterFn g_bgft_register = nullptr;
+static BgftDebugRegisterFn g_bgft_debug_register = nullptr;
 static BgftStartFn g_bgft_start = nullptr;
 static BgftProgressFn g_bgft_progress = nullptr;
 static NetInitFn g_net_init = nullptr;
@@ -259,6 +261,7 @@ static bool init_bgft() {
     if (!resolve_symbol(g_bgft_module, "sceBgftServiceInit", reinterpret_cast<void**>(&g_bgft_init))) return false;
     if (!resolve_symbol(g_bgft_module, "sceBgftServiceTerm", reinterpret_cast<void**>(&g_bgft_term))) return false;
     if (!resolve_symbol(g_bgft_module, "sceBgftServiceDownloadRegisterTask", reinterpret_cast<void**>(&g_bgft_register))) return false;
+    if (!resolve_symbol(g_bgft_module, "sceBgftServiceIntDebugDownloadRegisterPkg", reinterpret_cast<void**>(&g_bgft_debug_register))) return false;
     if (!resolve_symbol(g_bgft_module, "sceBgftServiceIntDownloadStartTask", reinterpret_cast<void**>(&g_bgft_start))) return false;
     if (!resolve_symbol(g_bgft_module, "sceBgftServiceIntDownloadGetProgress", reinterpret_cast<void**>(&g_bgft_progress))) return false;
 
@@ -346,8 +349,9 @@ static bool start_install(const std::string& name, int* task_out, int* error_out
         "\"fileOffset\":0,\"fileSize\":%llu,\"hashValue\":\"%s\"}]}",
         static_cast<unsigned long long>(package_size), package_digest,
         package_url.c_str(), static_cast<unsigned long long>(package_size), piece_digest);
-    bool manifest_ok = manifest_written > 0 && fclose(manifest) == 0;
-    if (!manifest_ok) return false;
+    bool manifest_write_ok = manifest_written > 0;
+    int manifest_close_result = fclose(manifest);
+    if (!manifest_write_ok || manifest_close_result != 0) return false;
 
     int user_id = -1;
     int ret = g_user_get_foreground ? g_user_get_foreground(&user_id) : -1;
@@ -366,8 +370,18 @@ static bool start_install(const std::string& name, int* task_out, int* error_out
     params.packageSubType = "";
     params.packageSize = static_cast<uint32_t>(package_size);
 
+    const uint32_t content_flags = read_be32(header + 0x78);
+    const bool is_patch = (content_flags & 0x00100000) ||
+                          (content_flags & 0x40000000) ||
+                          (content_flags & 0x41000000) ||
+                          (content_flags & 0x60000000);
+
     OrbisBgftTaskId task = -1;
-    ret = g_bgft_register(&params, &task);
+    if (is_patch) {
+        ret = g_bgft_debug_register ? g_bgft_debug_register(&params, &task) : -1;
+    } else {
+        ret = g_bgft_register(&params, &task);
+    }
     if (ret == 0) ret = g_bgft_start(task);
     if (error_out) *error_out = ret;
     if (ret != 0) return false;
