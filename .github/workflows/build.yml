@@ -33,6 +33,12 @@ jobs:
           go build -trimpath -o "$GITHUB_WORKSPACE/ps4/tools/create-gp4" .
           test -x "$GITHUB_WORKSPACE/ps4/tools/create-gp4"
           "$GITHUB_WORKSPACE/ps4/tools/create-gp4" -h
+          git clone --depth 1 https://github.com/OpenOrbis/create-fself.git "$RUNNER_TEMP/create-fself-source"
+          cd "$RUNNER_TEMP/create-fself-source/cmd/create-fself"
+          cp go-linux.mod go.mod
+          go build -trimpath -o "$GITHUB_WORKSPACE/ps4/tools/create-fself" .
+          test -x "$GITHUB_WORKSPACE/ps4/tools/create-fself"
+          "$GITHUB_WORKSPACE/ps4/tools/create-fself" -h
 
       - name: Generate required PS4 app icon
         run: |
@@ -54,11 +60,8 @@ jobs:
             bash -lc 'set -euo pipefail
               export OO_PS4_TOOLCHAIN=/lib/OpenOrbisSDK
               test -x tools/create-gp4
-              test -x "$OO_PS4_TOOLCHAIN/bin/linux/create-eboot"
+              test -x tools/create-fself
               test -x "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core"
-              echo "=== create-eboot help ==="
-              "$OO_PS4_TOOLCHAIN/bin/linux/create-eboot" --help || true
-              "$OO_PS4_TOOLCHAIN/bin/linux/create-eboot" -h || true
               make clean
               make
               "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core" pkg_validate IV0000-NY0R00001_00-NY0REMOTEINSTALL.pkg
