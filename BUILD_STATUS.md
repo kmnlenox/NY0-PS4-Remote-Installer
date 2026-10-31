@@ -2,11 +2,12 @@
 
 ## Latest completed native build
 
-- GitHub Actions run: [#52 — successful build](https://github.com/kmnlenox/NY0-PS4-Remote-Installer/actions/runs/41251916332)
-- Artifact: [ny0-remote-installer-fpkg](https://github.com/kmnlenox/NY0-PS4-Remote-Installer/actions/runs/41251916332/artifacts/13061089249)
-- PKG SHA-256: `1b7f7d71a9331c8111dd55df05f62f6c2fb46e56d692006a2fa05e3a3268cfe6`
-- PKG size: approximately 6.4 MB
-- The C++ executable compiled and linked; OpenOrbis generated the fSELF/PKG; `PkgTool.Core pkg_validate` passed, including the PKG header signature and Debug RIF signature checks.
+- GitHub Actions run: [#54 — successful build and header verification](https://github.com/kmnlenox/NY0-PS4-Remote-Installer/actions/runs/41252005156)
+- Artifact: [ny0-remote-installer-fpkg](https://github.com/kmnlenox/NY0-PS4-Remote-Installer/actions/runs/41252005156/artifacts/13061204109)
+- PKG SHA-256: `e5810569238870f202e895848eba2de74cd0061df0db191b1cc490d8ad015db3`
+- PKG size: 6,619,136 bytes
+- The C++ executable compiled and linked; OpenOrbis generated the fSELF/PKG; `PkgTool.Core pkg_validate` passed, including PKG header and Debug RIF signature checks.
+- The independent PKG-header test passed: Content ID `IV0000-NY0R00001_00-NY0REMOTEINSTALL`, content type `0x1A` (PS4GD), size `6,619,136`, and a non-empty package digest. These are the fields the runtime BGFT manifest builder reads.
 
 ## Implemented in source
 
@@ -24,7 +25,7 @@
 
 - [x] Native source compiled and linked (run #52)
 - [x] PKG passes OpenOrbis package validation (run #52)
-- [ ] Dedicated PKG-header verification script passes (added to the next CI run)
+- [x] Dedicated PKG-header verification script passes (run #54)
 - [ ] Package installs on the user's PS4
 - [ ] App launches and reports BGFT ready
 - [ ] Safari can upload a real PKG
