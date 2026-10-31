@@ -62,6 +62,7 @@ using NetCtlGetInfoFn = int32_t (*)(int32_t, void*);
 using UserInitFn = int32_t (*)(void*);
 using UserGetForegroundFn = int32_t (*)(int32_t*);
 using AppInstInitFn = int32_t (*)();
+using SysmoduleLoadInternalFn = uint32_t (*)(uint32_t);
 
 union Ny0NetCtlInfo { char ip_address[16]; char proxy_server[256]; };
 static constexpr int ORBIS_NET_CTL_INFO_IP_ADDRESS = 14;
@@ -133,6 +134,8 @@ static NetCtlGetInfoFn g_netctl_get_info = nullptr;
 static UserInitFn g_user_init = nullptr;
 static UserGetForegroundFn g_user_get_foreground = nullptr;
 static AppInstInitFn g_appinst_init = nullptr;
+static SysmoduleLoadInternalFn g_sysmodule_load_internal = nullptr;
+static int32_t g_sysmodule_module = -1;
 static int32_t g_bgft_module = -1;
 static int32_t g_net_module = -1;
 static int32_t g_netctl_module = -1;
@@ -512,6 +515,24 @@ static bool init_network() {
 }
 
 static bool init_system_services() {
+    g_sysmodule_module = load_module("/system/common/lib/libSceSysmodule.sprx");
+    if (!resolve_symbol(g_sysmodule_module, "sceSysmoduleLoadModuleInternal", reinterpret_cast<void**>(&g_sysmodule_load_internal))) return false;
+    const uint32_t modules[] = {
+        0x80000004, // SYSCORE
+        0x80000010, // SYSTEM_SERVICE
+        0x80000011, // USER_SERVICE
+        0x80000009, // NETCTL
+        0x8000001C, // NET
+        0x8000000A, // HTTP
+        0x8000000B, // SSL
+        0x80000014, // APP_INST_UTIL
+        0x8000002A, // BGFT
+        0x8000000C  // NP_COMMON
+    };
+    for (uint32_t module_id : modules) {
+        if (g_sysmodule_load_internal(module_id) != 0) return false;
+    }
+
     g_user_module = load_module("/system/common/lib/libSceUserService.sprx");
     g_appinst_module = load_module("/system/common/lib/libSceAppInstUtil.sprx");
     if (g_user_module <= 0 || g_appinst_module <= 0) return false;
