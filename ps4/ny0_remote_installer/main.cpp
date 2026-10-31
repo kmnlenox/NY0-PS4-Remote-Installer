@@ -610,10 +610,12 @@ int main() {
         fflush(log);
     }
 
-    // Deliberately do not load system modules, initialize BGFT, or open sockets.
-    // This isolates executable/SELF launch from the service and network code.
-    for (;;) {
-        sceKernelUsleep(1000000);
+    // Launch-isolation build: write a marker and exit normally.
+    // Never park the PS4 application thread in an endless loop during this test.
+    if (log) {
+        fprintf(log, "NY0 diagnostic launch test completed; exiting normally.\\n");
+        fflush(log);
+        fclose(log);
     }
     return 0;
 }
