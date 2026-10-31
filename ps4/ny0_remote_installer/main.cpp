@@ -33,15 +33,15 @@ struct OrbisBgftDownloadParam {
     const char* releaseDate;
     const char* packageType;
     const char* packageSubType;
-    uint32_t packageSize;
+    unsigned long packageSize;
 };
 struct OrbisBgftTaskProgress {
     uint32_t bits;
     int32_t errorResult;
-    uint32_t length;
-    uint32_t transferred;
-    uint32_t lengthTotal;
-    uint32_t transferredTotal;
+    unsigned long length;
+    unsigned long transferred;
+    unsigned long lengthTotal;
+    unsigned long transferredTotal;
     uint32_t numIndex;
     uint32_t numTotal;
     uint32_t restSec;
@@ -368,7 +368,7 @@ static bool start_install(const std::string& name, int* task_out, int* error_out
     params.playgoScenarioId = "0";
     params.packageType = package_type;
     params.packageSubType = "";
-    params.packageSize = static_cast<uint32_t>(package_size);
+    params.packageSize = static_cast<unsigned long>(package_size);
 
     const uint32_t content_flags = read_be32(header + 0x78);
     const bool is_patch = (content_flags & 0x00100000) ||
@@ -436,9 +436,11 @@ static void handle_client(int fd) {
                 char body[512];
                 snprintf(body, sizeof(body),
                     "{\"status\":\"success\",\"task_id\":%d,\"error\":%d,"
-                    "\"transferred\":%u,\"total\":%u,\"preparing_percent\":%d,"
+                    "\"transferred\":%llu,\"total\":%llu,\"preparing_percent\":%d,"
                     "\"local_copy_percent\":%d,\"remaining_seconds\":%u}",
-                    g_last_task, p.errorResult, p.transferredTotal, p.lengthTotal,
+                    g_last_task, p.errorResult,
+                    static_cast<unsigned long long>(p.transferredTotal),
+                    static_cast<unsigned long long>(p.lengthTotal),
                     p.preparingPercent, p.localCopyPercent, p.restSecTotal);
                 response(fd, 200, "OK", "application/json; charset=utf-8", body);
             }
