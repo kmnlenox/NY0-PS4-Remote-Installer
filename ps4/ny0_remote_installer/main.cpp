@@ -33,18 +33,69 @@ static constexpr int SERVER_PORT = 12800;
 static constexpr size_t UPLOAD_CHUNK_MAX = 2 * 1024 * 1024;
 static constexpr uint32_t BGFT_HEAP_SIZE = 1024 * 1024;
 
+struct OrbisBgftInitParams { void* heap; size_t heapSize; };
+using OrbisBgftTaskId = int32_t;
+enum { ORBIS_BGFT_TASK_OPT_DISABLE_CDN_QUERY_PARAM = 0x10000 };
+struct OrbisBgftDownloadParam {
+    int32_t userId;
+    int32_t entitlementType;
+    const char* id;
+    const char* contentUrl;
+    const char* contentExUrl;
+    const char* contentName;
+    const char* iconPath;
+    const char* skuId;
+    int32_t option;
+    const char* playgoScenarioId;
+    const char* releaseDate;
+    const char* packageType;
+    const char* packageSubType;
+    uint32_t packageSize;
+};
+struct OrbisBgftTaskProgress {
+    uint32_t bits;
+    int32_t errorResult;
+    uint32_t length;
+    uint32_t transferred;
+    uint32_t lengthTotal;
+    uint32_t transferredTotal;
+    uint32_t numIndex;
+    uint32_t numTotal;
+    uint32_t restSec;
+    uint32_t restSecTotal;
+    int32_t preparingPercent;
+    int32_t localCopyPercent;
+};
 using BgftInitFn = int32_t (*)(OrbisBgftInitParams*);
 using BgftTermFn = int32_t (*)();
 using BgftRegisterFn = int32_t (*)(OrbisBgftDownloadParam*, OrbisBgftTaskId*);
 using BgftStartFn = int32_t (*)(OrbisBgftTaskId);
 using BgftProgressFn = int32_t (*)(OrbisBgftTaskId, OrbisBgftTaskProgress*);
+using NetInitFn = int32_t (*)();
+using NetPoolCreateFn = int32_t (*)(const char*, int32_t, int32_t);
+using NetCtlGetInfoFn = int32_t (*)(int32_t, void*);
+using UserInitFn = int32_t (*)(void*);
+using UserGetForegroundFn = int32_t (*)(int32_t*);
+using AppInstInitFn = int32_t (*)();
+union Ny0NetCtlInfo { char ip_address[16]; char proxy_server[256]; };
+static constexpr int ORBIS_NET_CTL_INFO_IP_ADDRESS = 14;
 
 static BgftInitFn g_bgft_init = nullptr;
 static BgftTermFn g_bgft_term = nullptr;
 static BgftRegisterFn g_bgft_register = nullptr;
 static BgftStartFn g_bgft_start = nullptr;
 static BgftProgressFn g_bgft_progress = nullptr;
+static NetInitFn g_net_init = nullptr;
+static NetPoolCreateFn g_net_pool_create = nullptr;
+static NetCtlGetInfoFn g_netctl_get_info = nullptr;
+static UserInitFn g_user_init = nullptr;
+static UserGetForegroundFn g_user_get_foreground = nullptr;
+static AppInstInitFn g_appinst_init = nullptr;
 static int32_t g_bgft_module = -1;
+static int32_t g_net_module = -1;
+static int32_t g_netctl_module = -1;
+static int32_t g_user_module = -1;
+static int32_t g_appinst_module = -1;
 static int32_t g_net_pool = -1;
 static char g_ip[16] = "0.0.0.0";
 static bool g_install_ready = false;
@@ -199,16 +250,23 @@ static bool send_download(int fd, const std::string& name, const std::string& ra
     return ok;
 }
 
+static int32_t load_module(const char* path) {
+    return static_cast<int32_t>(sceKernelLoadStartModule(path, 0, nullptr, 0, nullptr, nullptr));
+}
+
+static bool resolve_symbol(int32_t module, const char* name, void** out) {
+    return module > 0 && sceKernelDlsym(module, name, out) == 0 && *out != nullptr;
+}
+
 static bool init_bgft() {
-    g_bgft_module = static_cast<int32_t>(sceKernelLoadStartModule(
-        "/system/common/lib/libSceBgft.sprx", 0, nullptr, 0, nullptr, nullptr));
+    g_bgft_module = load_module("/system/common/lib/libSceBgft.sprx");
     if (g_bgft_module <= 0) return false;
 
-    if (sceKernelDlsym(g_bgft_module, "sceBgftServiceInit", reinterpret_cast<void**>(&g_bgft_init)) != 0) return false;
-    if (sceKernelDlsym(g_bgft_module, "sceBgftServiceTerm", reinterpret_cast<void**>(&g_bgft_term)) != 0) return false;
-    if (sceKernelDlsym(g_bgft_module, "sceBgftServiceDownloadRegisterTask", reinterpret_cast<void**>(&g_bgft_register)) != 0) return false;
-    if (sceKernelDlsym(g_bgft_module, "sceBgftServiceIntDownloadStartTask", reinterpret_cast<void**>(&g_bgft_start)) != 0) return false;
-    if (sceKernelDlsym(g_bgft_module, "sceBgftServiceIntDownloadGetProgress", reinterpret_cast<void**>(&g_bgft_progress)) != 0) return false;
+    if (!resolve_symbol(g_bgft_module, "sceBgftServiceInit", reinterpret_cast<void**>(&g_bgft_init))) return false;
+    if (!resolve_symbol(g_bgft_module, "sceBgftServiceTerm", reinterpret_cast<void**>(&g_bgft_term))) return false;
+    if (!resolve_symbol(g_bgft_module, "sceBgftServiceDownloadRegisterTask", reinterpret_cast<void**>(&g_bgft_register))) return false;
+    if (!resolve_symbol(g_bgft_module, "sceBgftServiceIntDownloadStartTask", reinterpret_cast<void**>(&g_bgft_start))) return false;
+    if (!resolve_symbol(g_bgft_module, "sceBgftServiceIntDownloadGetProgress", reinterpret_cast<void**>(&g_bgft_progress))) return false;
 
     g_bgft_params.heapSize = BGFT_HEAP_SIZE;
     g_bgft_params.heap = malloc(g_bgft_params.heapSize);
@@ -232,7 +290,7 @@ static bool start_install(const std::string& name, int* task_out, int* error_out
     std::string url = std::string("http://") + g_ip + ":" + std::to_string(SERVER_PORT) + "/download/" + name;
 
     int user_id = -1;
-    int ret = sceUserServiceGetForegroundUser(&user_id);
+    int ret = g_user_get_foreground ? g_user_get_foreground(&user_id) : -1;
     if (ret != 0) { if (error_out) *error_out = ret; return false; }
 
     OrbisBgftDownloadParam params{};
@@ -393,29 +451,32 @@ static void handle_client(int fd) {
 }
 
 static bool init_network() {
-    if (sceNetCtlInit() != 0) return false;
-    if (sceNetInit() != 0) return false;
-    g_net_pool = sceNetPoolCreate("ny0_remote_installer", 1024 * 1024, 0);
+    g_netctl_module = load_module("/system/common/lib/libSceNetCtl.sprx");
+    g_net_module = load_module("/system/common/lib/libSceNet.sprx");
+    if (g_netctl_module <= 0 || g_net_module <= 0) return false;
+    if (!resolve_symbol(g_netctl_module, "sceNetCtlInit", reinterpret_cast<void**>(&g_net_init))) return false;
+    if (!resolve_symbol(g_netctl_module, "sceNetCtlGetInfo", reinterpret_cast<void**>(&g_netctl_get_info))) return false;
+    if (!resolve_symbol(g_net_module, "sceNetInit", reinterpret_cast<void**>(&g_net_init))) return false;
+    if (!resolve_symbol(g_net_module, "sceNetPoolCreate", reinterpret_cast<void**>(&g_net_pool_create))) return false;
+    if (g_net_init() != 0) return false;
+    g_net_pool = g_net_pool_create("ny0_remote_installer", 1024 * 1024, 0);
     if (g_net_pool < 0) return false;
     Ny0NetCtlInfo info{};
-    if (sceNetCtlGetInfo(ORBIS_NET_CTL_INFO_IP_ADDRESS, &info) == 0 && info.ip_address[0]) {
+    if (g_netctl_get_info(ORBIS_NET_CTL_INFO_IP_ADDRESS, &info) == 0 && info.ip_address[0]) {
         strncpy(g_ip, info.ip_address, sizeof(g_ip) - 1);
     }
     return true;
 }
 
 static bool init_system_services() {
-    sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_SYSCORE);
-    sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_SYSTEM_SERVICE);
-    sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_USER_SERVICE);
-    sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_NETCTL);
-    sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_NET);
-    sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_APP_INST_UTIL);
-    sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_BGFT);
-    sceSysmoduleLoadModuleInternal(ORBIS_SYSMODULE_INTERNAL_NP_COMMON);
-
-    if (sceUserServiceInitialize(nullptr) != 0) return false;
-    if (sceAppInstUtilInitialize() != 0) return false;
+    g_user_module = load_module("/system/common/lib/libSceUserService.sprx");
+    g_appinst_module = load_module("/system/common/lib/libSceAppInstUtil.sprx");
+    if (g_user_module <= 0 || g_appinst_module <= 0) return false;
+    if (!resolve_symbol(g_user_module, "sceUserServiceInitialize", reinterpret_cast<void**>(&g_user_init))) return false;
+    if (!resolve_symbol(g_user_module, "sceUserServiceGetForegroundUser", reinterpret_cast<void**>(&g_user_get_foreground))) return false;
+    if (!resolve_symbol(g_appinst_module, "sceAppInstUtilInitialize", reinterpret_cast<void**>(&g_appinst_init))) return false;
+    if (g_user_init(nullptr) != 0) return false;
+    if (g_appinst_init() != 0) return false;
     g_install_ready = init_bgft();
     return true;
 }
