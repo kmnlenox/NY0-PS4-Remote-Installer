@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Verify the PS4 PKG header fields consumed by NY0's BGFT manifest builder."""
 import pathlib
+import re
 import struct
 import sys
 
@@ -25,8 +26,10 @@ digest = header[0xFE0:0x1000].hex()
 
 if package_size != size:
     raise SystemExit(f"FAIL: header size {package_size} != file size {size}")
-if len(content_id) != 36 or content_id[6] != "-" or content_id[16] != "_" or content_id[19] != "-":
-    raise SystemExit(f"FAIL: malformed Content ID {content_id!r}")
+if not re.fullmatch(r"[A-Z]{2}[0-9]{4}-[A-Z]{4}[0-9]{5}_[0-9]{2}-[A-Z0-9]{16}", content_id):
+    raise SystemExit(f"FAIL: invalid PS4 Content ID format {content_id!r}")
+if content_id[7:16] != "NYOR00001":
+    raise SystemExit(f"FAIL: package Content ID title ID {content_id[7:16]!r} does not match NYOR00001")
 if content_type not in (0x1A, 0x1B, 0x1C, 0x1E):
     raise SystemExit(f"FAIL: unsupported content type 0x{content_type:X}")
 if digest == "00" * 32:
