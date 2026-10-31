@@ -10,7 +10,7 @@ INTDIR      := $(PROJDIR)/x64/Debug
 CPPFILES    := $(wildcard $(PROJDIR)/*.cpp)
 OBJS        := $(patsubst $(PROJDIR)/%.cpp,$(INTDIR)/%.o,$(CPPFILES))
 CDIR        := linux
-CREATE_EBOOT := $(TOOLCHAIN)/bin/$(CDIR)/create-eboot
+CREATE_FSELF := tools/create-fself
 PKGTOOL     := $(TOOLCHAIN)/bin/$(CDIR)/PkgTool.Core
 CREATE_GP4  := tools/create-gp4
 PAID        := 0x3800000000000011
@@ -30,7 +30,7 @@ $(INTDIR)/%.o: $(PROJDIR)/%.cpp | $(INTDIR)
 
 eboot.bin: $(OBJS)
 	ld.lld $(INTDIR)/*.o -o $(INTDIR)/$(PROJDIR).elf $(LDFLAGS)
-	$(CREATE_EBOOT) -in=$(INTDIR)/$(PROJDIR).elf -out=$@ -paid=$(PAID) -ptype=fake
+	$(CREATE_FSELF) -in=$(INTDIR)/$(PROJDIR).elf -out=$(INTDIR)/$(PROJDIR).oelf -eboot=$@ -paid=$(PAID)
 	test -s $@
 
 sce_sys/param.sfo: Makefile
