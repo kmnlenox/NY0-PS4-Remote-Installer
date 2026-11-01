@@ -62,7 +62,7 @@ jobs:
             -w /workspace/ps4 \
             -v "$GITHUB_WORKSPACE:/workspace" \
             openorbisofficial/toolchain:latest \
-            bash -lc 'set -euo pipefail
+            bash -c 'set -euxo pipefail
               export OO_PS4_TOOLCHAIN=/lib/OpenOrbisSDK
               test -x tools/create-gp4
               test -x tools/create-fself
