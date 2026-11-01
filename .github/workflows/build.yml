@@ -57,61 +57,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          docker run --rm \
-            --user "$(id -u):$(id -g)" \
-            -w /workspace/ps4 \
-            -v "$GITHUB_WORKSPACE:/workspace" \
-            openorbisofficial/toolchain:latest \
-            bash -c 'set -euxo pipefail
-              export OO_PS4_TOOLCHAIN=/lib/OpenOrbisSDK
-              test -x tools/create-gp4
-              test -x tools/create-fself
-              test -x "/lib/OpenOrbisSDK/bin/linux/PkgTool.Core"
-              echo "=== MOUNT DIAGNOSTICS ==="
-              pwd
-              ls -la /workspace
-              ls -la /workspace/web || true
-              ls -la /workspace/ps4
-              echo "=== COPY WEB ASSETS ==="
-              mkdir -p web
-              cp -v /workspace/web/index.html /workspace/web/style.css /workspace/web/app.js web/
-              test -s web/index.html
-              test -s web/style.css
-              test -s web/app.js
-              # OpenOrbis sample runtime assets required by normal app packages.
-              # Use the SDK's own known-good files rather than fabricated placeholders.
-              test -s "/lib/OpenOrbisSDK/bin/data/right.sprx"
-              test -s "/lib/OpenOrbisSDK/bin/data/modules/libc.prx"
-              test -s "/lib/OpenOrbisSDK/bin/data/modules/libSceFios2.prx"
-              mkdir -p sce_sys/about sce_module
-              cp "/lib/OpenOrbisSDK/bin/data/right.sprx" sce_sys/about/right.sprx
-              cp "/lib/OpenOrbisSDK/bin/data/modules/libc.prx" sce_module/libc.prx
-              cp "/lib/OpenOrbisSDK/bin/data/modules/libSceFios2.prx" sce_module/libSceFios2.prx
-              make clean
-              make
-              "/lib/OpenOrbisSDK/bin/linux/PkgTool.Core" pkg_validate IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg
-              sha256sum IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg
-              ls -lh IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg eboot.bin
-
-              # Build a separate, tiny app using the same official SDK pipeline.
-              # It has no NY0 code, sockets, C++ features, or system-service calls.
-              cd diagnostics/launch_test
-              mkdir -p tools sce_sys
-              cp ../../tools/create-gp4 tools/create-gp4
-              cp ../../tools/create-fself tools/create-fself
-              cp ../../sce_sys/icon0.png sce_sys/icon0.png
-              mkdir -p sce_sys/about sce_module
-              cp ../../sce_sys/about/right.sprx sce_sys/about/right.sprx
-              cp ../../sce_module/libc.prx sce_module/libc.prx
-              cp ../../sce_module/libSceFios2.prx sce_module/libSceFios2.prx
-              make clean
-              make
-              "/lib/OpenOrbisSDK/bin/linux/PkgTool.Core" pkg_validate IV0000-NYOD00001_00-NY0LAUNCHTEST000.pkg
-              ls -lh IV0000-NYOD00001_00-NY0LAUNCHTEST000.pkg eboot.bin
-              cp IV0000-NYOD00001_00-NY0LAUNCHTEST000.pkg ../../NY0-LAUNCH-TEST.pkg
-              cp eboot.bin ../../NY0-LAUNCH-TEST-eboot.bin'
-        working-directory: ps4
-
+          docker run --rm --user "$(id -u):$(id -g)" -w /workspace -v "$GITHUB_WORKSPACE:/workspace" openorbisofficial/toolchain:latest bash /workspace/ps4/build-in-container.sh
+        working-directory: .
       - name: Verify NY0 PKG header fields used by the runtime BGFT manifest builder
         run: python3 tools/verify_pkg_header.py IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg
         working-directory: ps4
