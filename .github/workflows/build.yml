@@ -60,7 +60,7 @@ jobs:
               export OO_PS4_TOOLCHAIN=/lib/OpenOrbisSDK
               test -x tools/create-gp4
               test -x tools/create-fself
-              test -x "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core"
+              test -x "/lib/OpenOrbisSDK/bin/linux/PkgTool.Core"
               mkdir -p web
               cp -R /workspace/web/. web/
               test -s web/index.html
@@ -68,16 +68,16 @@ jobs:
               test -s web/app.js
               # OpenOrbis sample runtime assets required by normal app packages.
               # Use the SDK's own known-good files rather than fabricated placeholders.
-              test -s "$OO_PS4_TOOLCHAIN/samples/piglet/sce_sys/about/right.sprx"
-              test -s "$OO_PS4_TOOLCHAIN/samples/piglet/sce_module/libc.prx"
-              test -s "$OO_PS4_TOOLCHAIN/samples/piglet/sce_module/libSceFios2.prx"
+              test -s "/lib/OpenOrbisSDK/samples/piglet/sce_sys/about/right.sprx"
+              test -s "/lib/OpenOrbisSDK/samples/piglet/sce_module/libc.prx"
+              test -s "/lib/OpenOrbisSDK/samples/piglet/sce_module/libSceFios2.prx"
               mkdir -p sce_sys/about sce_module
-              cp "$OO_PS4_TOOLCHAIN/samples/piglet/sce_sys/about/right.sprx" sce_sys/about/right.sprx
-              cp "$OO_PS4_TOOLCHAIN/samples/piglet/sce_module/libc.prx" sce_module/libc.prx
-              cp "$OO_PS4_TOOLCHAIN/samples/piglet/sce_module/libSceFios2.prx" sce_module/libSceFios2.prx
+              cp "/lib/OpenOrbisSDK/samples/piglet/sce_sys/about/right.sprx" sce_sys/about/right.sprx
+              cp "/lib/OpenOrbisSDK/samples/piglet/sce_module/libc.prx" sce_module/libc.prx
+              cp "/lib/OpenOrbisSDK/samples/piglet/sce_module/libSceFios2.prx" sce_module/libSceFios2.prx
               make clean
               make
-              "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core" pkg_validate IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg
+              "/lib/OpenOrbisSDK/bin/linux/PkgTool.Core" pkg_validate IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg
               sha256sum IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg
               ls -lh IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg eboot.bin
 
@@ -94,7 +94,7 @@ jobs:
               cp ../../sce_module/libSceFios2.prx sce_module/libSceFios2.prx
               make clean
               make
-              "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core" pkg_validate IV0000-NYOD00001_00-NY0LAUNCHTEST000.pkg
+              "/lib/OpenOrbisSDK/bin/linux/PkgTool.Core" pkg_validate IV0000-NYOD00001_00-NY0LAUNCHTEST000.pkg
               ls -lh IV0000-NYOD00001_00-NY0LAUNCHTEST000.pkg eboot.bin
               cp IV0000-NYOD00001_00-NY0LAUNCHTEST000.pkg ../../NY0-LAUNCH-TEST.pkg
               cp eboot.bin ../../NY0-LAUNCH-TEST-eboot.bin'
