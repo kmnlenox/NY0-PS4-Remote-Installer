@@ -73,6 +73,16 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Upload NY0 identity-matched launch test
+        uses: actions/upload-artifact@v4
+        with:
+          name: ny0-identity-matched-launch-test
+          path: |
+            ps4/NY0-IDENTITY-LAUNCH-TEST.pkg
+            ps4/NY0-IDENTITY-LAUNCH-TEST-eboot.bin
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload isolated PS4 launch test
         uses: actions/upload-artifact@v4
         with:
