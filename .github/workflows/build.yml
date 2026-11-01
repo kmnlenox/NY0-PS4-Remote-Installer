@@ -47,7 +47,7 @@ jobs:
           test -s sce_sys/icon0.png
         working-directory: ps4
 
-      - name: Build and validate fake-signed homebrew PKG
+      - name: Build NY0 and isolated minimal launch-test packages
         shell: bash
         run: |
           set -euo pipefail
@@ -70,19 +70,44 @@ jobs:
               make
               "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core" pkg_validate IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg
               sha256sum IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg
-              ls -lh IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg eboot.bin'
+              ls -lh IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg eboot.bin
+
+              # Build a separate, tiny app using the same official SDK pipeline.
+              # It has no NY0 code, sockets, C++ features, or system-service calls.
+              cd diagnostics/launch_test
+              mkdir -p tools sce_sys
+              cp ../../tools/create-gp4 tools/create-gp4
+              cp ../../tools/create-fself tools/create-fself
+              cp ../../sce_sys/icon0.png sce_sys/icon0.png
+              make clean
+              make
+              "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core" pkg_validate IV0000-NYOD00001_00-NY0LAUNCHTEST000.pkg
+              file eboot.bin
+              ls -lh IV0000-NYOD00001_00-NY0LAUNCHTEST000.pkg eboot.bin
+              cp IV0000-NYOD00001_00-NY0LAUNCHTEST000.pkg ../../NY0-LAUNCH-TEST.pkg
+              cp eboot.bin ../../NY0-LAUNCH-TEST-eboot.bin'
         working-directory: ps4
 
-      - name: Verify PKG header fields used by the runtime BGFT manifest builder
+      - name: Verify NY0 PKG header fields used by the runtime BGFT manifest builder
         run: python3 tools/verify_pkg_header.py IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg
         working-directory: ps4
 
-      - name: Upload validated package
+      - name: Upload NY0 installer package
         uses: actions/upload-artifact@v4
         with:
           name: ny0-remote-installer-fpkg
           path: |
             ps4/IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg
             ps4/eboot.bin
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload isolated PS4 launch test
+        uses: actions/upload-artifact@v4
+        with:
+          name: ny0-minimal-launch-test
+          path: |
+            ps4/NY0-LAUNCH-TEST.pkg
+            ps4/NY0-LAUNCH-TEST-eboot.bin
           if-no-files-found: error
           retention-days: 14
