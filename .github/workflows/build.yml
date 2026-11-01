@@ -50,12 +50,9 @@ jobs:
       - name: Inspect SDK runtime asset locations
         shell: bash
         run: |
-          docker run --rm openorbisofficial/toolchain:latest bash -c '\''
-            echo "SDK root:"; ls -la /lib/OpenOrbisSDK
-            echo "Candidate runtime files:";
-            find /lib/OpenOrbisSDK -type f \\( -name right.sprx -o -name libc.prx -o -name libSceFios2.prx \\) -print | sort
-          '\''
-
+          set -euo pipefail
+          docker run --rm openorbisofficial/toolchain:latest bash -lc "echo SDK root; ls -la /lib/OpenOrbisSDK; echo Candidate runtime files; find /lib/OpenOrbisSDK -type f -name right.sprx -o -type f -name libc.prx -o -type f -name libSceFios2.prx"
+ 
       - name: Build NY0 and isolated minimal launch-test packages
         shell: bash
         run: |
