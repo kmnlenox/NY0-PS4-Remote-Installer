@@ -40,12 +40,12 @@ sce_sys/param.sfo: Makefile
 	$(PKGTOOL) sfo_setentry $@ TITLE_ID --type Utf8 --maxsize 12 --value '$(TITLE_ID)'
 	$(PKGTOOL) sfo_setentry $@ VERSION --type Utf8 --maxsize 8 --value '$(VERSION)'
 
-$(CONTENT_ID).pkg: eboot.bin sce_sys/param.sfo sce_sys/icon0.png pkg.gp4
+$(CONTENT_ID).pkg: eboot.bin sce_sys/param.sfo sce_sys/icon0.png sce_sys/about/right.sprx sce_module/libc.prx sce_module/libSceFios2.prx pkg.gp4
 	$(PKGTOOL) pkg_build pkg.gp4 .
 	$(PKGTOOL) pkg_validate $@
 
-pkg.gp4: eboot.bin sce_sys/param.sfo sce_sys/icon0.png
-	tools/create-gp4 -out $@ --content-id=$(CONTENT_ID) --files "eboot.bin sce_sys/param.sfo sce_sys/icon0.png"
+pkg.gp4: eboot.bin sce_sys/param.sfo sce_sys/icon0.png sce_sys/about/right.sprx sce_module/libc.prx sce_module/libSceFios2.prx
+	tools/create-gp4 -out $@ --content-id=$(CONTENT_ID) --files "eboot.bin sce_sys/param.sfo sce_sys/icon0.png sce_sys/about/right.sprx sce_module/libc.prx sce_module/libSceFios2.prx"
 
 clean:
 	rm -rf x64 pkg.gp4 sce_sys/param.sfo eboot.bin $(CONTENT_ID).pkg
