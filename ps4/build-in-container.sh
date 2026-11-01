@@ -26,6 +26,19 @@ make
 sha256sum IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg
 ls -lh IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg eboot.bin
 
+# Preserve the full NY0 package, then build a minimal executable with NY0's exact
+# title/content identity and the same package assets/metadata. This isolates the
+# executable from package identity/layout differences.
+cp -v IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg NY0-REMOTE-INSTALLER.pkg
+cp -v eboot.bin NY0-REMOTE-INSTALLER-eboot.bin
+make clean
+make PROJDIR=diagnostics/ny0_identity_test TITLE="NY0 Remote Installer" VERSION=01.00 TITLE_ID=NYOR00001 CONTENT_ID=IV0000-NYOR00001_00-NY0REMOTEINSTALL
+cp -v IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg NY0-IDENTITY-LAUNCH-TEST.pkg
+cp -v eboot.bin NY0-IDENTITY-LAUNCH-TEST-eboot.bin
+"$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core" pkg_validate NY0-IDENTITY-LAUNCH-TEST.pkg
+sha256sum NY0-IDENTITY-LAUNCH-TEST.pkg
+ls -lh NY0-IDENTITY-LAUNCH-TEST.pkg NY0-IDENTITY-LAUNCH-TEST-eboot.bin
+
 # Build and validate the independent launch smoke test.
 cd /workspace/ps4/diagnostics/launch_test
 mkdir -p tools sce_sys sce_sys/about sce_module
