@@ -6,6 +6,7 @@ CONTENT_ID  := IV0000-NYOR00001_00-NY0REMOTEINSTALL
 LIBS        := -lc -lkernel -lc++
 TOOLCHAIN   := $(OO_PS4_TOOLCHAIN)
 PROJDIR     := ny0_remote_installer
+ELFNAME     := $(notdir $(PROJDIR))
 INTDIR      := $(PROJDIR)/x64/Debug
 CPPFILES    := $(wildcard $(PROJDIR)/*.cpp)
 OBJS        := $(patsubst $(PROJDIR)/%.cpp,$(INTDIR)/%.o,$(CPPFILES))
@@ -29,8 +30,8 @@ $(INTDIR)/%.o: $(PROJDIR)/%.cpp | $(INTDIR)
 	clang++ $(CXXFLAGS) -o $@ $<
 
 eboot.bin: $(OBJS)
-	ld.lld $(INTDIR)/*.o -o $(INTDIR)/$(PROJDIR).elf $(LDFLAGS)
-	$(CREATE_FSELF) -in=$(INTDIR)/$(PROJDIR).elf -out=$(INTDIR)/$(PROJDIR).oelf --eboot "eboot.bin" --paid $(PAID)
+	ld.lld $(INTDIR)/*.o -o $(INTDIR)/$(ELFNAME).elf $(LDFLAGS)
+	$(CREATE_FSELF) -in=$(INTDIR)/$(PROJDIR).elf -out=$(INTDIR)/$(ELFNAME).oelf --eboot "eboot.bin" --paid $(PAID)
 	test -s $@
 
 sce_sys/param.sfo: Makefile
