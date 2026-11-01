@@ -74,13 +74,13 @@ jobs:
               test -s web/app.js
               # OpenOrbis sample runtime assets required by normal app packages.
               # Use the SDK's own known-good files rather than fabricated placeholders.
-              test -s "/lib/OpenOrbisSDK/samples/piglet/sce_sys/about/right.sprx"
-              test -s "/lib/OpenOrbisSDK/samples/piglet/sce_module/libc.prx"
-              test -s "/lib/OpenOrbisSDK/samples/piglet/sce_module/libSceFios2.prx"
+              test -s "/lib/OpenOrbisSDK/bin/data/right.sprx"
+              test -s "/lib/OpenOrbisSDK/bin/data/modules/libc.prx"
+              test -s "/lib/OpenOrbisSDK/bin/data/modules/libSceFios2.prx"
               mkdir -p sce_sys/about sce_module
-              cp "/lib/OpenOrbisSDK/samples/piglet/sce_sys/about/right.sprx" sce_sys/about/right.sprx
-              cp "/lib/OpenOrbisSDK/samples/piglet/sce_module/libc.prx" sce_module/libc.prx
-              cp "/lib/OpenOrbisSDK/samples/piglet/sce_module/libSceFios2.prx" sce_module/libSceFios2.prx
+              cp "/lib/OpenOrbisSDK/bin/data/right.sprx" sce_sys/about/right.sprx
+              cp "/lib/OpenOrbisSDK/bin/data/modules/libc.prx" sce_module/libc.prx
+              cp "/lib/OpenOrbisSDK/bin/data/modules/libSceFios2.prx" sce_module/libSceFios2.prx
               make clean
               make
               "/lib/OpenOrbisSDK/bin/linux/PkgTool.Core" pkg_validate IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg
