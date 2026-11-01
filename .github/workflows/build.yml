@@ -82,7 +82,6 @@ jobs:
               make clean
               make
               "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core" pkg_validate IV0000-NYOD00001_00-NY0LAUNCHTEST000.pkg
-              file eboot.bin
               ls -lh IV0000-NYOD00001_00-NY0LAUNCHTEST000.pkg eboot.bin
               cp IV0000-NYOD00001_00-NY0LAUNCHTEST000.pkg ../../NY0-LAUNCH-TEST.pkg
               cp eboot.bin ../../NY0-LAUNCH-TEST-eboot.bin'
