@@ -66,6 +66,15 @@ jobs:
               test -s web/index.html
               test -s web/style.css
               test -s web/app.js
+              # OpenOrbis sample runtime assets required by normal app packages.
+              # Use the SDK's own known-good files rather than fabricated placeholders.
+              test -s "$OO_PS4_TOOLCHAIN/samples/piglet/sce_sys/about/right.sprx"
+              test -s "$OO_PS4_TOOLCHAIN/samples/piglet/sce_module/libc.prx"
+              test -s "$OO_PS4_TOOLCHAIN/samples/piglet/sce_module/libSceFios2.prx"
+              mkdir -p sce_sys/about sce_module
+              cp "$OO_PS4_TOOLCHAIN/samples/piglet/sce_sys/about/right.sprx" sce_sys/about/right.sprx
+              cp "$OO_PS4_TOOLCHAIN/samples/piglet/sce_module/libc.prx" sce_module/libc.prx
+              cp "$OO_PS4_TOOLCHAIN/samples/piglet/sce_module/libSceFios2.prx" sce_module/libSceFios2.prx
               make clean
               make
               "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core" pkg_validate IV0000-NYOR00001_00-NY0REMOTEINSTALL.pkg
@@ -79,6 +88,10 @@ jobs:
               cp ../../tools/create-gp4 tools/create-gp4
               cp ../../tools/create-fself tools/create-fself
               cp ../../sce_sys/icon0.png sce_sys/icon0.png
+              mkdir -p sce_sys/about sce_module
+              cp ../../sce_sys/about/right.sprx sce_sys/about/right.sprx
+              cp ../../sce_module/libc.prx sce_module/libc.prx
+              cp ../../sce_module/libSceFios2.prx sce_module/libSceFios2.prx
               make clean
               make
               "$OO_PS4_TOOLCHAIN/bin/linux/PkgTool.Core" pkg_validate IV0000-NYOD00001_00-NY0LAUNCHTEST000.pkg
